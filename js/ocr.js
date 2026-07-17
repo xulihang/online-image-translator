@@ -80,7 +80,6 @@ const OCR = (function() {
 
   function loadScript(src) {
     return new Promise(function(resolve, reject) {
-      // Skip if already loaded
       const existing = document.querySelector('script[src="' + src + '"]');
       if (existing) { resolve(); return; }
       const script = document.createElement('script');
@@ -88,6 +87,48 @@ const OCR = (function() {
       script.onload = function() { resolve(); };
       script.onerror = function() { reject(new Error('Failed to load: ' + src)); };
       document.head.appendChild(script);
+    });
+  }
+
+  // Try primary CDN (jsdelivr, global), fall back to mirror (jsdmirror, China) after timeout.
+  // Resolves with the URL that was actually used.
+  function loadScriptCDN(primary, fallback, timeoutMs) {
+    timeoutMs = timeoutMs || 15000;
+    return new Promise(function(resolve, reject) {
+      // Check if primary already loaded
+      if (document.querySelector('script[src="' + primary + '"]')) { resolve(primary); return; }
+      if (document.querySelector('script[src="' + fallback + '"]')) { resolve(fallback); return; }
+
+      const script = document.createElement('script');
+      let resolved = false;
+      const done = function(src) {
+        if (resolved) return;
+        resolved = true;
+        resolve(src);
+      };
+
+      script.onload = function() { done(primary); };
+      script.onerror = function() {
+        script.remove();
+        const fb = document.createElement('script');
+        fb.src = fallback;
+        fb.onload = function() { done(fallback); };
+        fb.onerror = function() { reject(new Error('Failed to load: ' + primary + ' / ' + fallback)); };
+        document.head.appendChild(fb);
+      };
+      script.src = primary;
+      document.head.appendChild(script);
+
+      // Timeout: switch to fallback if primary takes too long
+      setTimeout(function() {
+        if (resolved) return;
+        script.remove();
+        const fb = document.createElement('script');
+        fb.src = fallback;
+        fb.onload = function() { done(fallback); };
+        fb.onerror = function() { reject(new Error('Failed to load: ' + primary + ' / ' + fallback)); };
+        document.head.appendChild(fb);
+      }, timeoutMs);
     });
   }
 
@@ -103,16 +144,29 @@ const OCR = (function() {
     depsPromise = (async function() {
       const report = function(msg) { if (_onProgress) _onProgress(msg); };
 
-      // 1. ONNX Runtime
+      // 1. ONNX Runtime (jsdelivr → jsdmirror fallback)
+      let ortCDN = 'https://cdn.jsdelivr.net/npm/onnxruntime-web';
       if (typeof window.ort === 'undefined') {
         report('Loading ONNX Runtime...');
-        await loadScript('https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js');
+        const used = await loadScriptCDN(
+          'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js',
+          'https://cdn.jsdmirror.com/npm/onnxruntime-web/dist/ort.min.js'
+        );
+        // Derive base URL: strip '/dist/ort.min.js' suffix
+        ortCDN = used.replace(/\/dist\/ort\.min\.js$/, '');
+      }
+      // Set wasm path to match the CDN that actually loaded
+      if (window.ort && window.ort.env && window.ort.env.wasm) {
+        window.ort.env.wasm.wasmPaths = ortCDN + '/dist/';
       }
 
-      // 2. OpenCV.js
+      // 2. OpenCV.js (jsdelivr → jsdmirror fallback)
       if (typeof window.cv === 'undefined') {
         report('Loading OpenCV...');
-        await loadScript('https://docs.opencv.org/4.8.0/opencv.js');
+        await loadScriptCDN(
+          'https://cdn.jsdelivr.net/npm/paddleocr-browser@1.0.4/dist/opencv.js',
+          'https://cdn.jsdmirror.com/npm/paddleocr-browser@1.0.4/dist/opencv.js'
+        );
       }
 
       // 3. esearch-ocr (local build)
@@ -168,10 +222,6 @@ const OCR = (function() {
 
     paddleInitPromise = (async function() {
       const Paddle = window['esearch-ocr'];
-
-      if (window.ort.env && window.ort.env.wasm) {
-        window.ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/';
-      }
 
       const modelInfo = getPaddleModelInfo(sourceLang);
       const res = await fetch(modelInfo.dicUrl);
