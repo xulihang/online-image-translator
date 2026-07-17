@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
-  <title>Online Image Translator — Translate Comics, Manga &amp; Images Instantly</title>
+  <title>在线图片翻译器 — 漫画翻译、拍照翻译、在线图片翻译</title>
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 
   <!-- Primary SEO -->
-  <meta name="description" content="Free online image translator that translates text in comics, manga, screenshots, and photos. Supports camera translate, OCR + AI translation for Japanese, Chinese, Korean, and more. No installation required." />
-  <meta name="keywords" content="online image translator, comic translation, manga translation, camera translate, image translator, translate manga, translate comic, OCR translation, photo translate" />
+  <meta name="description" content="免费的在线图片翻译工具，支持漫画翻译、拍照翻译、截屏翻译。可翻译日语、英语、韩语、中文等多国语言图片中的文字。无需安装，打开即用。" />
+  <meta name="keywords" content="在线图片翻译, 漫画翻译, 拍照翻译, 图片翻译, 在线翻译, 漫画图片翻译, OCR翻译, 照片翻译, 截图翻译, 日文翻译, 韩文翻译" />
   <meta name="author" content="ImageTrans" />
   <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://imagetrans.org/" />
+  <link rel="canonical" href="https://imagetrans.org/zh/" />
 
   <!-- Language alternates -->
   <link rel="alternate" hreflang="en" href="https://imagetrans.org/" />
@@ -19,18 +19,18 @@
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Online Image Translator — Translate Comics, Manga &amp; Images Instantly" />
-  <meta property="og:description" content="Free online tool to translate text inside images: comics, manga, screenshots, and photos. Supports camera capture, OCR, and AI-powered translation for 14+ languages." />
-  <meta property="og:url" content="https://imagetrans.org/" />
-  <meta property="og:locale" content="en_US" />
+  <meta property="og:title" content="在线图片翻译器 — 漫画翻译、拍照翻译、在线图片翻译" />
+  <meta property="og:description" content="免费在线图片翻译工具，支持漫画翻译、拍照翻译。OCR + AI 翻译，支持日语、英语、韩语、中文等 14+ 种语言。" />
+  <meta property="og:url" content="https://imagetrans.org/zh/" />
+  <meta property="og:locale" content="zh_CN" />
   <meta property="og:image" content="https://imagetrans.org/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Online Image Translator — Translate Comics, Manga &amp; Images" />
-  <meta name="twitter:description" content="Free online image translator. Translate text in comics, manga, screenshots &amp; photos. Camera translate, OCR + AI. 14+ languages." />
+  <meta name="twitter:title" content="在线图片翻译器 — 漫画翻译、拍照翻译、图片翻译" />
+  <meta name="twitter:description" content="免费在线图片翻译工具。漫画翻译、拍照翻译、截图翻译。OCR + AI，支持 14+ 种语言。" />
   <meta name="twitter:image" content="https://imagetrans.org/og-image.png" />
 
   <!-- Structured data (JSON-LD) -->
@@ -38,17 +38,17 @@
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    "name": "Online Image Translator",
-    "url": "https://imagetrans.org/",
-    "description": "Free online image translator that translates text in comics, manga, screenshots, and photos using OCR and AI translation.",
+    "name": "在线图片翻译器",
+    "url": "https://imagetrans.org/zh/",
+    "description": "免费的在线图片翻译工具，支持漫画翻译、拍照翻译和截屏翻译。使用 OCR 和 AI 翻译技术，支持日语、英语、韩语、中文等多国语言。",
     "applicationCategory": "MultilingualApplication",
     "operatingSystem": "All",
-    "inLanguage": ["en", "zh-CN"],
-    "browserRequirements": "Requires JavaScript",
+    "inLanguage": ["zh-CN", "en"],
+    "browserRequirements": "需要启用 JavaScript",
     "offers": {
       "@type": "Offer",
       "price": "0",
-      "priceCurrency": "USD"
+      "priceCurrency": "CNY"
     },
     "author": {
       "@type": "Person",
@@ -592,16 +592,16 @@
 <body>
 
 <!-- Skip to content (accessibility) -->
-<a href="#main-content" style="position:absolute;left:-9999px;" aria-label="Skip to main content">Skip to main content</a>
+<a href="#main-content" style="position:absolute;left:-9999px;" aria-label="跳转到主要内容">跳转到主要内容</a>
 
 <!-- Page Heading -->
-<h1 style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;">Online Image Translator — Comic Translation, Manga Translation, Camera Translate</h1>
+<h1 style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;">在线图片翻译器 — 漫画翻译、拍照翻译、在线图片翻译工具</h1>
 
 <!-- Tab Bar -->
-<nav class="tab-bar" aria-label="Main navigation">
-  <button class="tab-btn active" id="tab-translate" data-i18n="tab_translate">Translate</button>
-  <button class="tab-btn" id="tab-scan" data-i18n="tab_scan">Scan</button>
-  <button class="tab-btn" id="tab-settings" data-i18n="tab_settings">Settings</button>
+<nav class="tab-bar" aria-label="主导航">
+  <button class="tab-btn active" id="tab-translate" data-i18n="tab_translate">翻译</button>
+  <button class="tab-btn" id="tab-scan" data-i18n="tab_scan">扫描</button>
+  <button class="tab-btn" id="tab-settings" data-i18n="tab_settings">设置</button>
 </nav>
 
 <!-- Main Content -->
@@ -611,21 +611,21 @@
   <div class="tab-panel" id="panel-translate">
     <div class="translate-layout">
       <div class="translate-toolbar">
-        <button class="btn-secondary" id="btn-select-image" data-i18n="select_image">Select Image</button>
-        <button class="btn-primary" id="btn-translate" data-i18n="translate_btn">Translate</button>
+        <button class="btn-secondary" id="btn-select-image" data-i18n="select_image">选择图片</button>
+        <button class="btn-primary" id="btn-translate" data-i18n="translate_btn">翻译</button>
         <label>
           <input type="checkbox" id="chk-show-translated" />
-          <span data-i18n="show_translated">Translated</span>
+          <span data-i18n="show_translated">显示译文</span>
         </label>
       </div>
       <div class="translate-image-area">
         <div class="drop-zone" id="translate-drop-zone">
           <div class="dz-icon">🖼️</div>
-          <div data-i18n="upload_image">Click to upload or drag &amp; drop</div>
+          <div data-i18n="upload_image">点击上传或拖放图片</div>
         </div>
         <div class="image-container" id="translate-image-container">
-          <img id="img-source" alt="Source image uploaded for translation" style="display:none;" />
-          <img id="img-target" alt="Translated image with text replaced" style="display:none;" />
+          <img id="img-source" alt="上传的待翻译原图" style="display:none;" />
+          <img id="img-target" alt="翻译后的图片，文字已被替换" style="display:none;" />
           <div class="text-overlay" id="translate-text-overlay"></div>
         </div>
       </div>
@@ -637,8 +637,8 @@
   <div class="tab-panel hidden" id="panel-scan">
     <div class="scan-layout">
       <div class="scan-toolbar">
-        <button class="btn-primary" id="btn-camera-start" data-i18n="camera_start">Open Camera</button>
-        <button class="btn-secondary" id="btn-scan-gallery" data-i18n="scan_gallery">Load Image</button>
+        <button class="btn-primary" id="btn-camera-start" data-i18n="camera_start">打开相机</button>
+        <button class="btn-secondary" id="btn-scan-gallery" data-i18n="scan_gallery">加载图片</button>
       </div>
       <div class="scan-results" id="scan-results"></div>
     </div>
@@ -647,43 +647,43 @@
 
   <!-- Full-screen Scan Overlay (outside tab panels, covers entire viewport) -->
   <div class="scan-fullscreen" id="scan-fullscreen">
-    <img id="scan-fs-image" style="display:none;" />
+    <img id="scan-fs-image" alt="扫描图片" style="display:none;" />
     <video id="scan-fs-video" muted autoplay playsinline style="display:none;"></video>
     <div class="scan-selection-mask" id="scan-selection-mask">
       <div class="scan-selection-box" id="scan-selection-box"></div>
     </div>
-    <button class="scan-fs-btn close" id="scan-fs-close" title="Close">✕</button>
+    <button class="scan-fs-btn close" id="scan-fs-close" title="关闭">✕</button>
     <select class="scan-fs-camera-select" id="scan-fs-camera-select" style="display:none;"></select>
-    <button class="scan-fs-btn capture" id="scan-fs-capture" data-i18n="scan_capture_btn">Capture</button>
+    <button class="scan-fs-btn capture" id="scan-fs-capture" data-i18n="scan_capture_btn">拍照</button>
   </div>
 
   <!-- ===== Settings Tab ===== -->
   <div class="tab-panel hidden" id="panel-settings">
     <div class="settings-layout">
       <div class="settings-card">
-        <div class="settings-card-title" data-i18n="settings_translation">Translation</div>
+        <div class="settings-card-title" data-i18n="settings_translation">翻译</div>
         <div class="form-row">
           <label>
-            <span data-i18n="settings_source_lang">Source lang</span>
+            <span data-i18n="settings_source_lang">源语言</span>
             <select id="setting-sourceLang"></select>
           </label>
           <label>
-            <span data-i18n="settings_target_lang">Target lang</span>
+            <span data-i18n="settings_target_lang">目标语言</span>
             <select id="setting-targetLang"></select>
           </label>
         </div>
         <div class="form-row">
           <label>
-            <span data-i18n="settings_translation_mode">Translation Mode</span>
+            <span data-i18n="settings_translation_mode">翻译模式</span>
             <select id="setting-translationMode">
               <option value="imagetrans" data-i18n="settings_mode_imagetrans">ImageTrans</option>
-              <option value="local" data-i18n="settings_mode_local">Local PaddleOCR</option>
+              <option value="local" data-i18n="settings_mode_local">本地PaddleOCR</option>
             </select>
           </label>
         </div>
         <div class="form-row">
           <label>
-            <span data-i18n="settings_default_preset">Default Preset</span>
+            <span data-i18n="settings_default_preset">默认预设</span>
             <select id="setting-defaultPresetTranslation">
               <option value="mymemory" data-i18n="settings_preset_mymemory">MyMemory</option>
             </select>
@@ -692,62 +692,62 @@
       </div>
 
       <div class="settings-card">
-        <div class="settings-card-title" data-i18n="settings_server">Server Connection</div>
+        <div class="settings-card-title" data-i18n="settings_server">服务器连接</div>
         <div class="form-row">
-          <label><span data-i18n="settings_server_url">Server URL</span></label>
+          <label><span data-i18n="settings_server_url">服务器URL</span></label>
           <input type="text" id="setting-serverURL" class="wide" />
         </div>
         <div class="form-row">
-          <button class="btn-secondary btn-sm" id="btn-public-server" data-i18n="settings_public_server">Use public server</button>
-          <button class="btn-secondary btn-sm" id="btn-local-server" data-i18n="settings_local_server">Use local server</button>
+          <button class="btn-secondary btn-sm" id="btn-public-server" data-i18n="settings_public_server">使用公共服务器</button>
+          <button class="btn-secondary btn-sm" id="btn-local-server" data-i18n="settings_local_server">使用本地服务器</button>
         </div>
         <div class="form-row">
-          <label><span data-i18n="settings_display_name">Display name</span></label>
+          <label><span data-i18n="settings_display_name">显示名称</span></label>
           <input type="text" id="setting-displayName" placeholder="default" />
-          <button class="btn-secondary btn-sm" id="btn-check-instances" data-i18n="settings_check_instances">Check instances</button>
+          <button class="btn-secondary btn-sm" id="btn-check-instances" data-i18n="settings_check_instances">检查已有实例</button>
         </div>
         <div class="form-row">
-          <label><span data-i18n="settings_password">Password</span></label>
+          <label><span data-i18n="settings_password">密码（可选）</span></label>
           <input type="password" id="setting-password" />
         </div>
       </div>
 
       <div class="settings-card">
-        <div class="settings-card-title" data-i18n="settings_rendering">Rendering</div>
+        <div class="settings-card-title" data-i18n="settings_rendering">图片捕捉和渲染</div>
         <div class="form-row">
           <label class="checkbox-label">
             <input type="checkbox" id="setting-renderTextInFrontend" />
-            <span data-i18n="settings_render_frontend">Render text in front-end</span>
+            <span data-i18n="settings_render_frontend">在前端渲染文字</span>
           </label>
         </div>
         <div class="form-row">
-          <label data-i18n="settings_font_css">Font CSS</label>
+          <label data-i18n="settings_font_css">字体CSS</label>
           <textarea id="setting-renderTextCSS" rows="3"></textarea>
         </div>
         <div class="form-row" style="gap:6px;">
-          <span style="font-size:12px;color:var(--text-secondary);" data-i18n="css_presets">CSS Presets:</span>
-          <button class="btn-secondary btn-sm" id="css-default" data-i18n="css_default">Default</button>
-          <button class="btn-secondary btn-sm" id="css-center" data-i18n="css_center">Center</button>
-          <button class="btn-secondary btn-sm" id="css-center-bold" data-i18n="css_center_bold">Center+Bold</button>
-          <button class="btn-secondary btn-sm" id="css-rounded" data-i18n="css_rounded">Rounded</button>
-          <button class="btn-secondary btn-sm" id="css-uppercase" data-i18n="css_uppercase">Uppercase</button>
-          <button class="btn-secondary btn-sm" id="css-rounded-uppercase" data-i18n="css_rounded_uppercase">Rounded+Up</button>
+          <span style="font-size:12px;color:var(--text-secondary);" data-i18n="css_presets">CSS预设：</span>
+          <button class="btn-secondary btn-sm" id="css-default" data-i18n="css_default">默认</button>
+          <button class="btn-secondary btn-sm" id="css-center" data-i18n="css_center">居中</button>
+          <button class="btn-secondary btn-sm" id="css-center-bold" data-i18n="css_center_bold">居中+粗体</button>
+          <button class="btn-secondary btn-sm" id="css-rounded" data-i18n="css_rounded">圆角+居中</button>
+          <button class="btn-secondary btn-sm" id="css-uppercase" data-i18n="css_uppercase">大写+居中</button>
+          <button class="btn-secondary btn-sm" id="css-rounded-uppercase" data-i18n="css_rounded_uppercase">圆角+大写</button>
         </div>
       </div>
 
       <div class="settings-card">
-        <div class="settings-card-title" data-i18n="settings_openai">OpenAI API</div>
+        <div class="settings-card-title" data-i18n="settings_openai">OpenAI兼容API（可选）</div>
         <div class="form-row">
           <label class="checkbox-label">
             <input type="checkbox" id="setting-useOpenAI" />
-            <span data-i18n="settings_enable_openai">Enable OpenAI API</span>
+            <span data-i18n="settings_enable_openai">启用OpenAI兼容API</span>
           </label>
         </div>
         <div id="openai-section" style="display:none;">
           <div class="form-row">
-            <label><span data-i18n="settings_ocr_method">OCR method</span></label>
+            <label><span data-i18n="settings_ocr_method">OCR方法</span></label>
             <select id="setting-ocrMethod">
-              <option value="paddleocr" data-i18n="settings_ocr_paddleocr">PaddleOCR</option>
+              <option value="paddleocr" data-i18n="settings_ocr_paddleocr">PaddleOCR（本地）</option>
               <option value="imagetrans" data-i18n="settings_ocr_imagetrans">ImageTrans</option>
             </select>
           </div>
@@ -760,50 +760,50 @@
             <input type="password" id="setting-openaiKey" class="wide" />
           </div>
           <div class="form-row">
-            <label><span data-i18n="settings_model">Model</span></label>
+            <label><span data-i18n="settings_model">模型</span></label>
             <input type="text" id="setting-openaiModel" />
           </div>
           <div class="form-row">
-            <label><span data-i18n="settings_prompt">Prompt</span></label>
+            <label><span data-i18n="settings_prompt">提示词</span></label>
             <textarea id="setting-openaiPrompt" rows="4"></textarea>
           </div>
         </div>
       </div>
 
       <div class="settings-card">
-        <div class="settings-card-title" data-i18n="settings_image_processing">Image Processing</div>
+        <div class="settings-card-title" data-i18n="settings_image_processing">图片处理（用于PaddleOCR）</div>
         <div class="form-row">
-          <label><span data-i18n="settings_x_spacing">X spacing</span></label>
+          <label><span data-i18n="settings_x_spacing">X间距（px）</span></label>
           <input type="number" id="setting-xSpacing" min="0" max="200" />
-          <label><span data-i18n="settings_y_spacing">Y spacing</span></label>
+          <label><span data-i18n="settings_y_spacing">Y间距（px）</span></label>
           <input type="number" id="setting-ySpacing" min="0" max="200" />
         </div>
         <div class="form-row">
           <label class="checkbox-label">
             <input type="checkbox" id="setting-useYOLODetection" />
-            <span data-i18n="settings_use_yolo">Use YOLO for text detection</span>
+            <span data-i18n="settings_use_yolo">使用YOLO检测文字</span>
           </label>
         </div>
         <div class="form-row">
           <label class="checkbox-label">
             <input type="checkbox" id="setting-useYOLOForJapanese" />
-            <span data-i18n="settings_use_yolo_jp">Use YOLO for Japanese</span>
+            <span data-i18n="settings_use_yolo_jp">日语使用YOLO检测</span>
           </label>
         </div>
       </div>
 
       <div class="settings-card">
-        <div class="settings-card-title" data-i18n="settings_ui_lang">Interface Language</div>
+        <div class="settings-card-title" data-i18n="settings_ui_lang">界面语言</div>
         <div class="form-row">
           <select id="setting-uiLanguage">
-            <option value="" data-i18n="options_ui_lang_default">Browser Default</option>
+            <option value="" data-i18n="options_ui_lang_default">浏览器默认</option>
             <option value="en" data-i18n="options_ui_lang_en">English</option>
             <option value="zh_CN" data-i18n="options_ui_lang_zh">中文</option>
           </select>
         </div>
       </div>
 
-      <button class="btn-primary btn-save" id="btn-settings-save" data-i18n="settings_save">Save Settings</button>
+      <button class="btn-primary btn-save" id="btn-settings-save" data-i18n="settings_save">保存设置</button>
     </div>
   </div>
 
@@ -813,51 +813,51 @@
 <!-- Status Mask -->
 <div class="status-mask" id="status-mask">
   <div class="status-spinner"></div>
-  <div class="status-text" id="status-text">Translating...</div>
+  <div class="status-text" id="status-text">翻译中...</div>
 </div>
 
 <!-- First-run Setup Modal -->
 <div class="setup-modal" id="setup-modal">
   <div class="setup-modal-content">
-    <h2>Welcome to Online Image Translator</h2>
-    <p style="color:var(--text-secondary);margin-bottom:16px;">Choose your translation method and languages to get started.</p>
+    <h2>欢迎使用在线图片翻译器</h2>
+    <p style="color:var(--text-secondary);margin-bottom:16px;">选择翻译方式和语言，开始使用。</p>
 
     <div class="setup-section">
-      <div class="setup-label">Translation Method</div>
+      <div class="setup-label">翻译方式</div>
       <div class="setup-options">
         <label class="setup-option" id="setup-opt-server">
           <input type="radio" name="setup-mode" value="imagetrans" checked />
           <div class="setup-option-content">
-            <strong>ImageTrans Server</strong>
-            <span>Connect to a remote/local ImageTrans server. Best quality, handles layout & rendering.</span>
+            <strong>ImageTrans 服务器</strong>
+            <span>连接到远程或本地 ImageTrans 服务器。效果最佳，自动处理排版和渲染。</span>
           </div>
         </label>
         <label class="setup-option" id="setup-opt-local">
           <input type="radio" name="setup-mode" value="local" />
           <div class="setup-option-content">
-            <strong>Local PaddleOCR</strong>
-            <span>Run OCR in your browser. Free, no server needed. Translate via MyMemory (free) or bring your own API key for ChatGPT / DeepSeek / OpenAI-compatible services.</span>
+            <strong>本地 PaddleOCR</strong>
+            <span>在浏览器中运行 OCR。免费，无需服务器。通过 MyMemory（免费）或自带 API Key（ChatGPT / DeepSeek / OpenAI 兼容服务）进行翻译。</span>
           </div>
         </label>
       </div>
     </div>
 
     <div class="setup-section">
-      <div class="setup-label">Languages</div>
+      <div class="setup-label">语言</div>
       <div class="setup-row">
-        <label>Source <select id="setup-sourceLang"></select></label>
-        <label>→ Target <select id="setup-targetLang"></select></label>
+        <label>源语言 <select id="setup-sourceLang"></select></label>
+        <label>→ 目标语言 <select id="setup-targetLang"></select></label>
       </div>
     </div>
 
     <div class="setup-section" id="setup-server-section">
-      <div class="setup-label">Server URL (optional)</div>
+      <div class="setup-label">服务器 URL（可选）</div>
       <input type="text" id="setup-serverURL" placeholder="https://service.basiccat.org:51043" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;" />
     </div>
 
-    <button class="btn-primary" id="btn-setup-start" style="width:100%;padding:12px;font-size:15px;font-weight:600;margin-top:8px;">Get Started</button>
+    <button class="btn-primary" id="btn-setup-start" style="width:100%;padding:12px;font-size:15px;font-weight:600;margin-top:8px;">开始使用</button>
     <div style="text-align:center;margin-top:8px;">
-      <a href="javascript:void(0)" id="btn-setup-skip" style="color:var(--text-secondary);font-size:13px;">Skip, use defaults</a>
+      <a href="javascript:void(0)" id="btn-setup-skip" style="color:var(--text-secondary);font-size:13px;">跳过，使用默认设置</a>
     </div>
   </div>
 </div>
@@ -866,41 +866,41 @@
 <div class="text-modal" id="text-modal">
   <div class="text-modal-content">
     <div class="text-modal-header">
-      <h3 data-i18n="text_detail">Text Detail</h3>
+      <h3 data-i18n="text_detail">文字详情</h3>
       <button class="modal-close">✕</button>
     </div>
     <div class="text-modal-section">
-      <div class="text-modal-label" data-i18n="source_text">Source</div>
+      <div class="text-modal-label" data-i18n="source_text">原文</div>
       <div class="text-modal-source modal-source"></div>
     </div>
     <div class="text-modal-section">
-      <div class="text-modal-label" data-i18n="target_text">Translation</div>
+      <div class="text-modal-label" data-i18n="target_text">译文</div>
       <div class="text-modal-target modal-target"></div>
     </div>
     <div class="text-modal-actions">
       <select class="modal-tts-select" id="modal-tts-select" style="flex:1;min-width:0;"></select>
-      <button class="btn-secondary btn-sm modal-copy-btn" data-i18n="scan_copy">Copy</button>
-      <button class="btn-secondary btn-sm modal-tts-btn" data-i18n="scan_speak">Speak</button>
+      <button class="btn-secondary btn-sm modal-copy-btn" data-i18n="scan_copy">复制</button>
+      <button class="btn-secondary btn-sm modal-tts-btn" data-i18n="scan_speak">朗读</button>
     </div>
   </div>
 </div>
 
-<noscript><div style="padding:20px;text-align:center;background:#fff3cd;border-bottom:1px solid #ffc107;font-size:14px;">This application requires JavaScript. Please enable JavaScript in your browser settings.</div></noscript>
+<noscript><div style="padding:20px;text-align:center;background:#fff3cd;border-bottom:1px solid #ffc107;font-size:14px;">此应用需要启用 JavaScript。请在浏览器设置中启用 JavaScript。</div></noscript>
 
 <!-- Application Modules -->
 <script>
-  // Set default UI language for English page
+  // 中文页面默认使用中文界面
   if (!localStorage.getItem('uiLanguage')) {
-    localStorage.setItem('uiLanguage', 'en');
+    localStorage.setItem('uiLanguage', 'zh_CN');
   }
 </script>
-<script src="js/settings.js"></script>
-<script src="js/fittext.js"></script>
-<script src="js/tts.js"></script>
-<script src="js/ocr.js"></script>
-<script src="js/render.js"></script>
-<script src="js/translate.js"></script>
-<script src="js/app.js"></script>
+<script src="../js/settings.js"></script>
+<script src="../js/fittext.js"></script>
+<script src="../js/tts.js"></script>
+<script src="../js/ocr.js"></script>
+<script src="../js/render.js"></script>
+<script src="../js/translate.js"></script>
+<script src="../js/app.js"></script>
 
 </body>
 </html>

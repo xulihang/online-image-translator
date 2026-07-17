@@ -132,6 +132,20 @@
     });
   }
 
+  // Dynamic page titles per language
+  var PAGE_TITLES = {
+    en: {
+      translate: 'Online Image Translator — Translate Comics, Manga & Images',
+      scan: 'Camera Translate — Online Image Translator',
+      settings: 'Settings — Online Image Translator'
+    },
+    zh: {
+      translate: '在线图片翻译器 — 漫画翻译、拍照翻译',
+      scan: '拍照翻译 — 在线图片翻译器',
+      settings: '设置 — 在线图片翻译器'
+    }
+  };
+
   function switchTab(tabId) {
     // Update buttons
     Object.keys(tabButtons).forEach(function(id) {
@@ -141,6 +155,17 @@
     Object.keys(tabPanels).forEach(function(id) {
       tabPanels[id].classList.toggle('hidden', id !== tabId);
     });
+    // Update page title
+    updatePageTitle(tabId);
+  }
+
+  function updatePageTitle(tabId) {
+    var uiLang = Settings.get('uiLanguage') || '';
+    var langKey = uiLang === 'zh_CN' ? 'zh' : 'en';
+    var titles = PAGE_TITLES[langKey] || PAGE_TITLES['en'];
+    if (titles[tabId]) {
+      document.title = titles[tabId];
+    }
   }
 
   // Wait for an image to finish loading and browser to complete layout

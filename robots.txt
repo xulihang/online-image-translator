@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /js/
+Disallow: /lib/
+
+Sitemap: https://imagetrans.org/sitemap.xml
