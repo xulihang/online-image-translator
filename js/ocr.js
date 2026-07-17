@@ -109,6 +109,7 @@ const OCR = (function() {
 
       script.onload = function() { done(primary); };
       script.onerror = function() {
+        if (resolved) return;
         script.remove();
         const fb = document.createElement('script');
         fb.src = fallback;
