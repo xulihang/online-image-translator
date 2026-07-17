@@ -397,31 +397,26 @@
       }
 
       // Validate language pair
+      // Local PaddleOCR always needs explicit languages
+      // Remote server: local server can use auto (has its own project settings), public server can't
       const sourceLang = Settings.get('sourceLang');
       const targetLang = Settings.get('targetLang');
       const translationMode = Settings.get('translationMode');
       const useOpenAI = Settings.get('useOpenAI');
-      const serverURL = Settings.get('serverURL');
 
-      if (useOpenAI && Settings.get('ocrMethod') === 'paddleocr' && sourceLang === 'auto') {
-        alert(t('alert_set_langpair'));
-        hideStatus();
-        translateBtn.disabled = false;
-        return;
-      }
-      if (translationMode === 'local' && (sourceLang === 'auto' || targetLang === 'auto')) {
-        alert(t('alert_set_langpair'));
-        hideStatus();
-        translateBtn.disabled = false;
-        return;
-      }
-      if (serverURL.indexOf('https://service.basiccat.org:51043') !== -1 &&
-          (sourceLang === 'auto' || targetLang === 'auto') &&
-          translationMode === 'imagetrans' && !useOpenAI) {
-        alert(t('alert_set_langpair'));
-        hideStatus();
-        translateBtn.disabled = false;
-        return;
+      if (sourceLang === 'auto' || targetLang === 'auto') {
+        // Check if we're using a local server that supports auto
+        const serverURL = Settings.get('serverURL');
+        const isLocalServer = /(localhost|127\.0\.0\.1|local\.basiccat\.org|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)/i.test(serverURL);
+        const needsExplicitLang = (translationMode === 'local') || useOpenAI || !isLocalServer;
+
+        if (needsExplicitLang) {
+          alert(t('alert_set_langpair'));
+          switchTab('settings');
+          hideStatus();
+          translateBtn.disabled = false;
+          return;
+        }
       }
 
       const result = await Translate.translateImage(finalDataURL, { onProgress: showStatus });

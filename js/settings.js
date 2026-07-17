@@ -5,7 +5,7 @@ const DEFAULT_OPENAI_PROMPT = `Translate the following texts from {sourceLang} t
 Texts: {texts}`;
 
 const DEFAULTS = {
-  serverURL: 'https://local.basiccat.org:51043',
+  serverURL: 'https://service.basiccat.org:51043',
   pickingWay: '1',
   useCanvas: true,
   useCORS: true,
@@ -210,7 +210,7 @@ const I18N = {
     new_region: 'New Region',
     recognize: 'Recognize',
     server_failed: 'Failed to connect to server. Check the URL or try local mode.',
-    alert_set_langpair: 'Please set the language pair in the settings first and then try again.',
+    alert_set_langpair: 'Please set the source and target languages in Settings first. Auto-detect is not supported — select specific languages like Japanese → English.',
     overlay_translating: 'Translating...',
     css_presets: 'CSS Presets',
     css_default: 'Default',
@@ -302,7 +302,7 @@ const I18N = {
     new_region: '新区域',
     recognize: '识别',
     server_failed: '连接服务器失败。请检查URL或尝试本地模式。',
-    alert_set_langpair: '请先在设置中指定语言对，然后再试。',
+    alert_set_langpair: '请先在设置中指定源语言和目标语言。不支持自动检测，请选择具体的语言对，如日语→英语。',
     overlay_translating: '翻译中...',
     css_presets: 'CSS预设',
     css_default: '默认',
