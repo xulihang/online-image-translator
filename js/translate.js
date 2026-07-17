@@ -142,24 +142,6 @@ const Translate = (function() {
     return Promise.all(promises);
   }
 
-  // ==================== GLM-4-Flash ====================
-
-  async function translateViaGlm4Flash(sourceTexts, targetLang) {
-    const tl = (targetLang === 'auto' || !targetLang) ? 'en' : targetLang;
-    const resp = await fetch('http://service.basiccat.org:5000/translate/batch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ texts: sourceTexts, target_lang: tl })
-    });
-
-    if (!resp.ok) {
-      throw new Error('GLM-4-Flash API error: HTTP ' + resp.status);
-    }
-
-    const data = await resp.json();
-    return data.results.map(function(r) { return r.translated; });
-  }
-
   // ==================== OpenAI-Compatible API ====================
 
   async function translateViaOpenAI(sourceTexts, sourceLang, targetLang) {
@@ -292,19 +274,6 @@ const Translate = (function() {
     let translations;
     if (useOpenAI) {
       translations = await translateViaOpenAI(sourceTexts, sourceLang, targetLang);
-    } else if (defaultPreset === 'glm4flash') {
-      try {
-        const reflowedTexts = sourceTexts.map(function(t) { return reflowText(sourceLang, t); });
-        translations = await Promise.race([
-          translateViaGlm4Flash(reflowedTexts, targetLang),
-          new Promise(function(_, reject) {
-            setTimeout(function() { reject(new Error('glm4flash timeout')); }, 20000);
-          })
-        ]);
-      } catch (e) {
-        console.warn('glm4flash failed, falling back to MyMemory:', e);
-        translations = await translateBatchViaMyMemory(sourceTexts, sourceLang, targetLang);
-      }
     } else {
       translations = await translateBatchViaMyMemory(sourceTexts, sourceLang, targetLang);
     }
@@ -409,7 +378,6 @@ const Translate = (function() {
     translateRegionViaImageTrans: translateRegionViaImageTrans,
     translateUsingMyMemory: translateUsingMyMemory,
     translateBatchViaMyMemory: translateBatchViaMyMemory,
-    translateViaGlm4Flash: translateViaGlm4Flash,
     translateViaOpenAI: translateViaOpenAI,
     translateImage: translateImage,
     translateRegion: translateRegion
