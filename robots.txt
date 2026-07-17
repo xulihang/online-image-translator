@@ -3,4 +3,4 @@ Allow: /
 Disallow: /js/
 Disallow: /lib/
 
-Sitemap: https://imagetrans.org/sitemap.xml
+Sitemap: https://www.basiccat.org/online-image-translator/sitemap.xml
