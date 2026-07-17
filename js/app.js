@@ -600,19 +600,17 @@
       }
     });
 
-    // Initialize camera list
-    initScanCameras();
+    // Camera list initialized lazily when Open Camera is clicked
   }
 
   async function initScanCameras() {
+    // enumerateDevices works without camera permission (labels may be empty)
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      closeStream(stream);
       const devices = await navigator.mediaDevices.enumerateDevices();
       scanCameras = devices.filter(function(d) { return d.kind === 'videoinput'; });
       scanCurrentCamera = scanCameras.length > 0 ? scanCameras[scanCameras.length - 1] : null;
     } catch (e) {
-      console.log('Camera permission denied or no camera available');
+      console.log('Failed to enumerate devices');
     }
   }
 
@@ -620,30 +618,24 @@
 
   async function openScanCamera() {
     scanMode = 'camera';
-    // Get camera if needed
-    if (!scanCurrentCamera) {
-      await initScanCameras();
-    }
-    if (!scanCurrentCamera) {
-      alert('No camera available.');
-      return;
-    }
-    // Start stream
+    // Start stream first (triggers permission prompt)
     try {
       scanStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, deviceId: { exact: scanCurrentCamera.deviceId } },
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: 'environment' },
         audio: false
       });
-      if (scanFSVideo) {
-        scanFSVideo.srcObject = scanStream;
-        scanFSVideo.style.display = '';
-      }
-      if (scanFSImage) scanFSImage.style.display = 'none';
     } catch (e) {
       console.error('Failed to start camera:', e);
       alert('Failed to start camera.');
       return;
     }
+    if (scanFSVideo) {
+      scanFSVideo.srcObject = scanStream;
+      scanFSVideo.style.display = '';
+    }
+    if (scanFSImage) scanFSImage.style.display = 'none';
+    // Now enumerate devices (labels available after permission granted)
+    await initScanCameras();
 
     showScanFullscreen();
     populateScanCameraSelect();
@@ -695,11 +687,10 @@
 
   async function switchScanCameraTo(deviceId) {
     if (scanMode !== 'camera') return;
-    scanCurrentCamera = scanCameras.find(function(c) { return c.deviceId === deviceId; }) || scanCurrentCamera;
     closeStream(scanStream);
     try {
       scanStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, deviceId: { exact: scanCurrentCamera.deviceId } },
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, deviceId: { exact: deviceId } },
         audio: false
       });
       if (scanFSVideo) scanFSVideo.srcObject = scanStream;
