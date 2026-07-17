@@ -26,15 +26,27 @@
   let translateOriginalDataURL = null;
 
   // Scan tab
-  let scanVideo = null;
-  let scanCanvas = null;
-  let scanStream = null;
-  let scanActive = false;
-  let scanCameras = [];
-  let scanCurrentCamera = null;
-  let scanRegion = null;
   let scanResults = null;
   let scanFileInput = null;
+  // Scan fullscreen overlay
+  let scanFullscreen = null;
+  let scanFSImage = null;
+  let scanFSVideo = null;
+  let scanSelectionBox = null;
+  let scanStream = null;
+  let scanCameras = [];
+  let scanCurrentCamera = null;
+  let scanCameraSelect = null;
+  let scanRect = null;
+  let scanHandles = [];
+  let scanDragging = false;
+  let scanResizing = false;
+  let scanResizeCorner = null;
+  let scanDragStartX = 0, scanDragStartY = 0;
+  let scanDragOrigLeft = 0, scanDragOrigTop = 0;
+  let scanResizeAnchorX = 0, scanResizeAnchorY = 0;
+  let scanMode = 'camera'; // 'camera' or 'image'
+  let scanFSImageData = null;
 
   // Settings tab
   let settingsForm = null;
@@ -89,10 +101,13 @@
     translateOverlay = $('#translate-text-overlay');
 
     // Scan
-    scanVideo = $('#scan-video');
-    scanCanvas = $('#scan-canvas');
     scanResults = $('#scan-results');
     scanFileInput = $('#scan-file-input');
+    scanFullscreen = $('#scan-fullscreen');
+    scanFSImage = $('#scan-fs-image');
+    scanFSVideo = $('#scan-fs-video');
+    scanSelectionBox = $('#scan-selection-box');
+    scanCameraSelect = $('#scan-fs-camera-select');
 
     // Settings
     settingsForm = $('#settings-form');
@@ -422,57 +437,46 @@
   // ==================== Scan Tab ====================
 
   function setupScanTab() {
-    // Camera start button
-    const cameraStartBtn = $('#btn-camera-start');
-    if (cameraStartBtn) {
-      cameraStartBtn.addEventListener('click', function() {
-        if (scanActive) {
-          stopCamera();
-        } else {
-          startCamera();
-        }
-      });
+    // Open Camera button
+    const cameraBtn = $('#btn-camera-start');
+    if (cameraBtn) {
+      cameraBtn.addEventListener('click', openScanCamera);
     }
 
-    // Camera switch button
-    const cameraSwitchBtn = $('#btn-camera-switch');
-    if (cameraSwitchBtn) {
-      cameraSwitchBtn.addEventListener('click', switchCamera);
-    }
-
-    // Capture button
-    const captureBtn = $('#btn-scan-capture');
-    if (captureBtn) {
-      captureBtn.addEventListener('click', doScanCapture);
-    }
-
-    // Gallery/file button
+    // Load Image button
     const galleryBtn = $('#btn-scan-gallery');
     if (galleryBtn && scanFileInput) {
-      galleryBtn.addEventListener('click', function() {
-        scanFileInput.click();
-      });
+      galleryBtn.addEventListener('click', function() { scanFileInput.click(); });
     }
 
     if (scanFileInput) {
       scanFileInput.addEventListener('change', function() {
         if (scanFileInput.files.length > 0) {
-          loadScanImage(scanFileInput.files[0]);
+          openScanImage(scanFileInput.files[0]);
         }
       });
     }
 
-    // Region overlay click for dragging
-    const regionOverlay = $('#scan-region-overlay');
-    if (regionOverlay) {
-      setupRegionDragging(regionOverlay);
-    }
+    // Fullscreen: Close button
+    const closeBtn = $('#scan-fs-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeScanFullscreen);
+
+    // Fullscreen: Capture button
+    const captureBtn = $('#scan-fs-capture');
+    if (captureBtn) captureBtn.addEventListener('click', doScanCapture);
+
+    // Fullscreen: ESC to close
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && scanFullscreen && scanFullscreen.classList.contains('active')) {
+        closeScanFullscreen();
+      }
+    });
 
     // Initialize camera list
-    initCameras();
+    initScanCameras();
   }
 
-  async function initCameras() {
+  async function initScanCameras() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       closeStream(stream);
@@ -484,168 +488,383 @@
     }
   }
 
-  async function startCamera() {
-    if (!scanCurrentCamera) {
-      try {
-        await initCameras();
-      } catch (e) {
-        alert('No camera available.');
-        return;
-      }
-    }
-    if (!scanCurrentCamera) return;
+  // ==================== Scan: Fullscreen Overlay ====================
 
+  async function openScanCamera() {
+    scanMode = 'camera';
+    // Get camera if needed
+    if (!scanCurrentCamera) {
+      await initScanCameras();
+    }
+    if (!scanCurrentCamera) {
+      alert('No camera available.');
+      return;
+    }
+    // Start stream
     try {
       scanStream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1920 }, height: { ideal: 1080 }, deviceId: { exact: scanCurrentCamera.deviceId } },
         audio: false
       });
-      if (scanVideo) {
-        scanVideo.srcObject = scanStream;
-        scanVideo.style.display = '';
+      if (scanFSVideo) {
+        scanFSVideo.srcObject = scanStream;
+        scanFSVideo.style.display = '';
       }
-      scanActive = true;
-      updateCameraUI();
-      drawScanRegion();
+      if (scanFSImage) scanFSImage.style.display = 'none';
     } catch (e) {
       console.error('Failed to start camera:', e);
       alert('Failed to start camera.');
+      return;
     }
+
+    showScanFullscreen();
+    populateScanCameraSelect();
   }
 
-  function stopCamera() {
+  function openScanImage(file) {
+    scanMode = 'image';
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      scanFSImageData = e.target.result;
+      if (scanFSImage) {
+        scanFSImage.src = e.target.result;
+        scanFSImage.style.display = '';
+      }
+      if (scanFSVideo) scanFSVideo.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+    showScanFullscreen();
+    populateScanCameraSelect();
+  }
+
+  function showScanFullscreen() {
+    if (!scanFullscreen) return;
+    scanFullscreen.classList.add('active');
+    // Init selection rectangle after a short delay (wait for video/image to render)
+    setTimeout(function() {
+      initScanSelection();
+      addScanResizeHandles();
+    }, 300);
+  }
+
+  function closeScanFullscreen() {
+    if (!scanFullscreen) return;
+    scanFullscreen.classList.remove('active');
+    // Stop camera
     closeStream(scanStream);
     scanStream = null;
-    scanActive = false;
-    if (scanVideo) {
-      scanVideo.srcObject = null;
-      scanVideo.style.display = 'none';
-    }
-    updateCameraUI();
+    if (scanFSVideo) { scanFSVideo.srcObject = null; scanFSVideo.style.display = 'none'; }
+    if (scanFSImage) { scanFSImage.style.display = 'none'; scanFSImage.src = ''; }
+    scanFSImageData = null;
+    // Remove resize handles
+    removeScanResizeHandles();
+    // Remove selection box
+    if (scanSelectionBox) scanSelectionBox.style.display = 'none';
+    scanRect = null;
+    // Reset buttons
+    if (scanCameraSelect) scanCameraSelect.style.display = 'none';
   }
 
-  async function switchCamera() {
-    if (scanCameras.length < 2) return;
-    const currentIdx = scanCameras.indexOf(scanCurrentCamera);
-    const nextIdx = (currentIdx + 1) % scanCameras.length;
-    scanCurrentCamera = scanCameras[nextIdx];
-    if (scanActive) {
-      await stopCamera();
-      await startCamera();
-    }
-  }
-
-  function updateCameraUI() {
-    const cameraStartBtn = $('#btn-camera-start');
-    if (cameraStartBtn) {
-      cameraStartBtn.textContent = scanActive ? t('camera_stop') : t('camera_start');
-    }
-    const cameraSwitchBtn = $('#btn-camera-switch');
-    if (cameraSwitchBtn) {
-      cameraSwitchBtn.style.display = scanCameras.length > 1 ? '' : 'none';
-    }
-    const captureBtn = $('#btn-scan-capture');
-    if (captureBtn) {
-      captureBtn.style.display = scanActive ? '' : 'none';
-    }
-    const regionOverlay = $('#scan-region-overlay');
-    if (regionOverlay) {
-      regionOverlay.style.display = scanActive ? '' : 'none';
+  async function switchScanCameraTo(deviceId) {
+    if (scanMode !== 'camera') return;
+    scanCurrentCamera = scanCameras.find(function(c) { return c.deviceId === deviceId; }) || scanCurrentCamera;
+    closeStream(scanStream);
+    try {
+      scanStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1920 }, height: { ideal: 1080 }, deviceId: { exact: scanCurrentCamera.deviceId } },
+        audio: false
+      });
+      if (scanFSVideo) scanFSVideo.srcObject = scanStream;
+    } catch (e) {
+      console.error('Failed to switch camera:', e);
     }
   }
 
-  function drawScanRegion() {
-    if (!scanVideo || !scanVideo.videoWidth) return;
-    const region = Settings.get('region');
-    const overlay = $('#scan-region');
-    if (!overlay) return;
-    const width = scanVideo.clientWidth;
-    const height = scanVideo.clientHeight;
-    if (!width || !height) return;
-    const r = region || { left: 20, right: 80, top: 20, bottom: 60 };
-    overlay.style.left = (r.left / 100 * width) + 'px';
-    overlay.style.top = (r.top / 100 * height) + 'px';
-    overlay.style.width = ((r.right - r.left) / 100 * width) + 'px';
-    overlay.style.height = ((r.bottom - r.top) / 100 * height) + 'px';
-    scanRegion = r;
+  function populateScanCameraSelect() {
+    if (!scanCameraSelect) return;
+    scanCameraSelect.innerHTML = '';
+    if (scanMode === 'image' || scanCameras.length === 0) {
+      scanCameraSelect.style.display = 'none';
+      return;
+    }
+    scanCameras.forEach(function(cam, i) {
+      const opt = document.createElement('option');
+      opt.value = cam.deviceId;
+      opt.textContent = cam.label || ('Camera ' + (i + 1));
+      if (scanCurrentCamera && cam.deviceId === scanCurrentCamera.deviceId) {
+        opt.selected = true;
+      }
+      scanCameraSelect.appendChild(opt);
+    });
+    scanCameraSelect.style.display = '';
+    scanCameraSelect.disabled = scanCameras.length <= 1;
+    // Change handler
+    scanCameraSelect.onchange = function() {
+      switchScanCameraTo(scanCameraSelect.value);
+    };
   }
 
-  function setupRegionDragging(overlayEl) {
-    // Region dragging is handled by the scan-region element itself
-    // (using the overlay's built-in drag behavior)
-    let dragging = false, startX, startY, origLeft, origTop;
+  // ==================== Scan: Selection Rectangle ====================
 
-    const regionRect = $('#scan-region');
-    if (!regionRect) return;
+  function initScanSelection() {
+    if (!scanSelectionBox) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const selW = Math.round(vw * 0.6);
+    const selH = Math.round(vh * 0.6);
+    const selL = Math.round((vw - selW) / 2);
+    const selT = Math.round((vh - selH) / 2);
 
-    regionRect.addEventListener('mousedown', function(e) {
-      dragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      origLeft = regionRect.offsetLeft;
-      origTop = regionRect.offsetTop;
+    scanRect = { left: selL, top: selT, width: selW, height: selH };
+    applyScanRect(scanRect);
+    scanSelectionBox.style.display = '';
+
+    // Dragging setup
+    setupScanSelectionDrag();
+  }
+
+  function applyScanRect(rect) {
+    scanRect = rect;
+    if (!scanSelectionBox) return;
+    scanSelectionBox.style.left = rect.left + 'px';
+    scanSelectionBox.style.top = rect.top + 'px';
+    scanSelectionBox.style.width = rect.width + 'px';
+    scanSelectionBox.style.height = rect.height + 'px';
+    updateScanHandlePositions();
+  }
+
+  function setupScanSelectionDrag() {
+    if (!scanSelectionBox) return;
+
+    scanSelectionBox.onmousedown = function(e) {
+      if (scanResizing) return;
+      scanDragging = true;
+      scanDragStartX = e.clientX;
+      scanDragStartY = e.clientY;
+      scanDragOrigLeft = scanRect.left;
+      scanDragOrigTop = scanRect.top;
       e.preventDefault();
-    });
+    };
 
-    document.addEventListener('mousemove', function(e) {
-      if (!dragging) return;
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      regionRect.style.left = Math.max(0, origLeft + dx) + 'px';
-      regionRect.style.top = Math.max(0, origTop + dy) + 'px';
-    });
+    // Touch
+    scanSelectionBox.ontouchstart = function(e) {
+      if (scanResizing || e.touches.length !== 1) return;
+      scanDragging = true;
+      scanDragStartX = e.touches[0].clientX;
+      scanDragStartY = e.touches[0].clientY;
+      scanDragOrigLeft = scanRect.left;
+      scanDragOrigTop = scanRect.top;
+      e.preventDefault();
+    };
+  }
 
-    document.addEventListener('mouseup', function() {
-      if (dragging) {
-        dragging = false;
-        // Update region percentages
-        const containerWidth = overlayEl.clientWidth;
-        const containerHeight = overlayEl.clientHeight;
-        if (containerWidth && containerHeight) {
-          const left = regionRect.offsetLeft / containerWidth * 100;
-          const top = regionRect.offsetTop / containerHeight * 100;
-          const right = (regionRect.offsetLeft + regionRect.offsetWidth) / containerWidth * 100;
-          const bottom = (regionRect.offsetTop + regionRect.offsetHeight) / containerHeight * 100;
-          const newRegion = { left: Math.round(left), right: Math.round(right), top: Math.round(top), bottom: Math.round(bottom) };
-          Settings.set('region', newRegion);
-          scanRegion = newRegion;
+  // Global move/up handlers
+  document.addEventListener('mousemove', function(e) {
+    if (!scanDragging || !scanRect) return;
+    const dx = e.clientX - scanDragStartX;
+    const dy = e.clientY - scanDragStartY;
+    const newLeft = Math.max(0, Math.min(window.innerWidth - scanRect.width, scanDragOrigLeft + dx));
+    const newTop = Math.max(0, Math.min(window.innerHeight - scanRect.height, scanDragOrigTop + dy));
+    applyScanRect({ left: newLeft, top: newTop, width: scanRect.width, height: scanRect.height });
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (scanDragging) { scanDragging = false; }
+    if (scanResizing) { scanResizing = false; scanResizeCorner = null; }
+  });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!scanDragging || !scanRect || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - scanDragStartX;
+    const dy = e.touches[0].clientY - scanDragStartY;
+    const newLeft = Math.max(0, Math.min(window.innerWidth - scanRect.width, scanDragOrigLeft + dx));
+    const newTop = Math.max(0, Math.min(window.innerHeight - scanRect.height, scanDragOrigTop + dy));
+    applyScanRect({ left: newLeft, top: newTop, width: scanRect.width, height: scanRect.height });
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('touchend', function() {
+    if (scanDragging) { scanDragging = false; }
+    if (scanResizing) { scanResizing = false; scanResizeCorner = null; }
+  });
+
+  // ==================== Scan: Resize Handles ====================
+
+  function addScanResizeHandles() {
+    removeScanResizeHandles();
+    if (!scanRect) return;
+    const handleSize = window.innerWidth < 600 ? 16 : 12;
+    const offset = handleSize / 2;
+    const corners = [
+      { id: 'nw', left: scanRect.left - offset, top: scanRect.top - offset, cursor: 'nwse-resize' },
+      { id: 'ne', left: scanRect.left + scanRect.width - offset, top: scanRect.top - offset, cursor: 'nesw-resize' },
+      { id: 'sw', left: scanRect.left - offset, top: scanRect.top + scanRect.height - offset, cursor: 'nesw-resize' },
+      { id: 'se', left: scanRect.left + scanRect.width - offset, top: scanRect.top + scanRect.height - offset, cursor: 'nwse-resize' }
+    ];
+
+    corners.forEach(function(corner) {
+      const h = document.createElement('div');
+      h.className = 'scan-handle ' + corner.id;
+      h.style.cssText =
+        'position:fixed;z-index:9995;width:' + handleSize + 'px;height:' + handleSize + 'px;' +
+        'background:#fff;border:1px solid #333;border-radius:2px;cursor:' + corner.cursor + ';' +
+        'left:' + corner.left + 'px;top:' + corner.top + 'px;';
+      h.setAttribute('data-corner', corner.id);
+      h.addEventListener('mousedown', function(e) {
+        e.stopPropagation(); e.preventDefault();
+        startScanResize(corner.id, e.clientX, e.clientY);
+      });
+      h.addEventListener('touchstart', function(e) {
+        e.stopPropagation(); e.preventDefault();
+        if (e.touches.length === 1) {
+          startScanResize(corner.id, e.touches[0].clientX, e.touches[0].clientY);
         }
+      }, { passive: false });
+      document.body.appendChild(h);
+      scanHandles.push(h);
+    });
+  }
+
+  function removeScanResizeHandles() {
+    scanHandles.forEach(function(h) { h.remove(); });
+    scanHandles = [];
+  }
+
+  function updateScanHandlePositions() {
+    if (!scanRect) return;
+    const handleSize = window.innerWidth < 600 ? 16 : 12;
+    const offset = handleSize / 2;
+    const corners = {
+      nw: { left: scanRect.left - offset, top: scanRect.top - offset },
+      ne: { left: scanRect.left + scanRect.width - offset, top: scanRect.top - offset },
+      sw: { left: scanRect.left - offset, top: scanRect.top + scanRect.height - offset },
+      se: { left: scanRect.left + scanRect.width - offset, top: scanRect.top + scanRect.height - offset }
+    };
+
+    scanHandles.forEach(function(h) {
+      const id = h.getAttribute('data-corner');
+      if (corners[id]) {
+        h.style.left = corners[id].left + 'px';
+        h.style.top = corners[id].top + 'px';
       }
     });
   }
 
-  function loadScanImage(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const dataURL = e.target.result;
-      doScanTranslate(dataURL);
-    };
-    reader.readAsDataURL(file);
+  function startScanResize(corner, cx, cy) {
+    scanResizing = true;
+    scanResizeCorner = corner;
+    // Anchor = opposite corner
+    switch (corner) {
+      case 'nw':
+        scanResizeAnchorX = scanRect.left + scanRect.width;
+        scanResizeAnchorY = scanRect.top + scanRect.height;
+        break;
+      case 'ne':
+        scanResizeAnchorX = scanRect.left;
+        scanResizeAnchorY = scanRect.top + scanRect.height;
+        break;
+      case 'sw':
+        scanResizeAnchorX = scanRect.left + scanRect.width;
+        scanResizeAnchorY = scanRect.top;
+        break;
+      case 'se':
+        scanResizeAnchorX = scanRect.left;
+        scanResizeAnchorY = scanRect.top;
+        break;
+    }
   }
 
+  // Resize move handler (global)
+  document.addEventListener('mousemove', function(e) {
+    if (!scanResizing || !scanRect) return;
+    if (e.target && scanHandles.indexOf(e.target) === -1 && e.target !== scanSelectionBox) return;
+    resizeScanRect(e.clientX, e.clientY);
+  });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!scanResizing || !scanRect || e.touches.length !== 1) return;
+    resizeScanRect(e.touches[0].clientX, e.touches[0].clientY);
+    e.preventDefault();
+  }, { passive: false });
+
+  function resizeScanRect(cx, cy) {
+    let newLeft = Math.min(scanResizeAnchorX, cx);
+    let newTop = Math.min(scanResizeAnchorY, cy);
+    let newWidth = Math.abs(cx - scanResizeAnchorX);
+    let newHeight = Math.abs(cy - scanResizeAnchorY);
+
+    newLeft = Math.max(0, newLeft);
+    newTop = Math.max(0, newTop);
+    if (newLeft + newWidth > window.innerWidth) newWidth = window.innerWidth - newLeft;
+    if (newTop + newHeight > window.innerHeight) newHeight = window.innerHeight - newTop;
+    if (newWidth < 20) { newWidth = 20; newLeft = cx > scanResizeAnchorX ? scanResizeAnchorX : scanResizeAnchorX - 20; }
+    if (newHeight < 20) { newHeight = 20; newTop = cy > scanResizeAnchorY ? scanResizeAnchorY : scanResizeAnchorY - 20; }
+
+    applyScanRect({ left: newLeft, top: newTop, width: newWidth, height: newHeight });
+  }
+
+  // ==================== Scan: Capture & Translate ====================
+
   function doScanCapture() {
-    if (!scanVideo || !scanVideo.videoWidth) return;
-    const region = scanRegion || Settings.get('region');
-    const vw = scanVideo.videoWidth;
-    const vh = scanVideo.videoHeight;
-    const dw = scanVideo.clientWidth;
-    const dh = scanVideo.clientHeight;
+    if (!scanRect) return;
+    const rect = scanRect;
 
-    const scaleX = vw / dw;
-    const scaleY = vh / dh;
+    let sourceW, sourceH, sourceEl;
+    if (scanMode === 'camera' && scanFSVideo && scanFSVideo.videoWidth) {
+      sourceW = scanFSVideo.videoWidth;
+      sourceH = scanFSVideo.videoHeight;
+      sourceEl = scanFSVideo;
+    } else if (scanMode === 'image' && scanFSImage && scanFSImage.naturalWidth) {
+      sourceW = scanFSImage.naturalWidth;
+      sourceH = scanFSImage.naturalHeight;
+      sourceEl = scanFSImage;
+    } else {
+      return;
+    }
 
-    const sx = region.left / 100 * dw * scaleX;
-    const sy = region.top / 100 * dh * scaleY;
-    const sw = (region.right - region.left) / 100 * dw * scaleX;
-    const sh = (region.bottom - region.top) / 100 * dh * scaleY;
+    // Calculate scale: the video/image is object-fit:contain within the fullscreen area
+    const displayW = window.innerWidth;
+    const displayH = window.innerHeight;
+    const sourceAspect = sourceW / sourceH;
+    const displayAspect = displayW / displayH;
+    let renderW, renderH, offsetX, offsetY;
+
+    if (sourceAspect > displayAspect) {
+      renderH = displayH;
+      renderW = renderH * sourceAspect;
+      offsetX = (renderW - displayW) / 2;
+      offsetY = 0;
+    } else {
+      renderW = displayW;
+      renderH = renderW / sourceAspect;
+      offsetX = 0;
+      offsetY = (renderH - displayH) / 2;
+    }
+
+    const scaleX = sourceW / renderW;
+    const scaleY = sourceH / renderH;
+
+    let sx = (rect.left + offsetX) * scaleX;
+    let sy = (rect.top + offsetY) * scaleY;
+    let sw = rect.width * scaleX;
+    let sh = rect.height * scaleY;
+
+    // Clamp
+    sx = Math.max(0, Math.min(sourceW - 1, sx));
+    sy = Math.max(0, Math.min(sourceH - 1, sy));
+    sw = Math.max(1, Math.min(sourceW - sx, sw));
+    sh = Math.max(1, Math.min(sourceH - sy, sh));
 
     const canvas = document.createElement('canvas');
     canvas.width = sw;
     canvas.height = sh;
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(scanVideo, sx, sy, sw, sh, 0, 0, sw, sh);
+    ctx.drawImage(sourceEl, sx, sy, sw, sh, 0, 0, sw, sh);
 
     const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+
+    // Close fullscreen then translate
+    closeScanFullscreen();
     doScanTranslate(dataURL);
   }
 
@@ -685,6 +904,11 @@
     });
     textDiv.textContent = displayText;
     container.appendChild(textDiv);
+
+    // Click to show detail modal
+    container.addEventListener('click', function() {
+      showScanResultModal(regionMap);
+    });
 
     scanResults.insertBefore(container, scanResults.firstChild);
   }
