@@ -262,7 +262,7 @@ const Translate = (function() {
     }
 
     // Step 1: Run PaddleOCR locally
-    let boxes = await OCR.paddleOCR(imageDataURL, sourceLang);
+    let boxes = await OCR.paddleOCR(imageDataURL, sourceLang, options.onProgress);
 
     // Step 2: Extract source texts
     const sourceTexts = boxes.map(function(b) { return b.text || b.source || ''; });
@@ -297,7 +297,7 @@ const Translate = (function() {
       if (sourceLang === 'auto') {
         throw new Error('LANGPAIR_REQUIRED');
       }
-      boxes = await OCR.paddleOCR(imageDataURL, sourceLang);
+      boxes = await OCR.paddleOCR(imageDataURL, sourceLang, options.onProgress);
     } else {
       // Use ImageTrans for OCR
       const result = await translateViaImageTrans(imageDataURL, [], Object.assign({}, options, {
@@ -346,7 +346,7 @@ const Translate = (function() {
       }));
       boxes = ocrResult.boxes;
     } else {
-      boxes = await OCR.paddleOCR(imageDataURL, sourceLang);
+      boxes = await OCR.paddleOCR(imageDataURL, sourceLang, options.onProgress);
     }
 
     if (boxes.length === 0) {

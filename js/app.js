@@ -424,7 +424,7 @@
         return;
       }
 
-      const result = await Translate.translateImage(finalDataURL, {});
+      const result = await Translate.translateImage(finalDataURL, { onProgress: showStatus });
 
       if (result.noText) {
         alert(t('no_text'));
@@ -926,7 +926,7 @@
     showStatus(t('translating'));
 
     try {
-      const result = await Translate.translateRegion(dataURL, {});
+      const result = await Translate.translateRegion(dataURL, { onProgress: showStatus });
 
       if (result.regionMap) {
         addScanResult(dataURL, result.regionMap);

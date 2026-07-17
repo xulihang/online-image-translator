@@ -73,23 +73,89 @@ const OCR = (function() {
     };
   }
 
-  async function waitForDeps() {
-    return new Promise(function(resolve) {
-      const check = function() {
-        const hasOrt = typeof window.ort !== 'undefined';
-        const hasCv = typeof window.cv !== 'undefined';
-        const hasPaddle = typeof window['esearch-ocr'] !== 'undefined';
-        if (hasOrt && hasCv && hasPaddle) {
-          resolve();
-        } else {
-          setTimeout(check, 100);
-        }
-      };
-      check();
+  let depsLoading = false;
+  let depsLoaded = false;
+  let depsPromise = null;
+  let _onProgress = null;
+
+  function loadScript(src) {
+    return new Promise(function(resolve, reject) {
+      // Skip if already loaded
+      const existing = document.querySelector('script[src="' + src + '"]');
+      if (existing) { resolve(); return; }
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = function() { resolve(); };
+      script.onerror = function() { reject(new Error('Failed to load: ' + src)); };
+      document.head.appendChild(script);
     });
   }
 
-  async function initPaddle(sourceLang) {
+  async function loadDependencies(onProgress) {
+    if (depsLoaded) return;
+    if (depsLoading) {
+      _onProgress = onProgress;
+      return depsPromise;
+    }
+    depsLoading = true;
+    _onProgress = onProgress;
+
+    depsPromise = (async function() {
+      const report = function(msg) { if (_onProgress) _onProgress(msg); };
+
+      // 1. ONNX Runtime
+      if (typeof window.ort === 'undefined') {
+        report('Loading ONNX Runtime...');
+        await loadScript('https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js');
+      }
+
+      // 2. OpenCV.js
+      if (typeof window.cv === 'undefined') {
+        report('Loading OpenCV...');
+        await loadScript('https://docs.opencv.org/4.8.0/opencv.js');
+      }
+
+      // 3. esearch-ocr (local build)
+      if (typeof window['esearch-ocr'] === 'undefined') {
+        report('Loading OCR engine...');
+        // esearch-ocr.umd.js sets window['esearch-ocr']
+        await loadScript('lib/esearch-ocr/dist/esearch-ocr.umd.js');
+      }
+
+      // Wait for OpenCV to be fully ready (it sets cv on a callback)
+      if (typeof window.cv === 'undefined' || !window.cv.Mat) {
+        report('Initializing OpenCV...');
+        await new Promise(function(resolve) {
+          const check = function() {
+            if (typeof window.cv !== 'undefined' && window.cv.Mat) {
+              resolve();
+            } else if (typeof Module !== 'undefined' && Module.onRuntimeInitialized) {
+              const orig = Module.onRuntimeInitialized;
+              Module.onRuntimeInitialized = function() {
+                if (orig) orig();
+                resolve();
+              };
+            } else {
+              setTimeout(check, 200);
+            }
+          };
+          check();
+        });
+      }
+
+      depsLoaded = true;
+      report('');
+    })();
+
+    return depsPromise;
+  }
+
+  async function initPaddle(sourceLang, onProgress) {
+    // Load deps first if needed
+    if (!depsLoaded) {
+      await loadDependencies(onProgress);
+    }
+
     // If same language, reuse
     if (paddleCurrentLang === sourceLang && paddleReady) return;
 
@@ -101,7 +167,6 @@ const OCR = (function() {
     paddleReady = false;
 
     paddleInitPromise = (async function() {
-      await waitForDeps();
       const Paddle = window['esearch-ocr'];
 
       if (window.ort.env && window.ort.env.wasm) {
@@ -611,8 +676,8 @@ const OCR = (function() {
   }
 
   // Main PaddleOCR entry point (from getImage.js)
-  async function paddleOCR(imageDataURL, sourceLang) {
-    await initPaddle(sourceLang);
+  async function paddleOCR(imageDataURL, sourceLang, onProgress) {
+    await initPaddle(sourceLang, onProgress);
 
     // Load original image to check dimensions
     const info = await new Promise(function(resolve, reject) {
@@ -675,6 +740,8 @@ const OCR = (function() {
   return {
     initPaddle: initPaddle,
     paddleOCR: paddleOCR,
+    loadDependencies: loadDependencies,
+    isDepsLoaded: function() { return depsLoaded; },
     isPaddleReady: function() { return paddleReady; },
     getPaddleLang: function() { return paddleCurrentLang; }
   };
