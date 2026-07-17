@@ -648,10 +648,7 @@
 <!-- PaddleOCR CDN Dependencies (loaded before our modules) -->
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
 <script src="https://docs.opencv.org/4.8.0/opencv.js"></script>
-<script type="module">
-  import * as Paddle from "https://cdn.jsdelivr.net/npm/esearch-ocr@5.1.5/dist/esearch-ocr.js";
-  window['esearch-ocr'] = Paddle;
-</script>
+<script src="lib/esearch-ocr/dist/esearch-ocr.umd.js"></script>
 
 <!-- Application Modules -->
 <script src="js/settings.js"></script>
