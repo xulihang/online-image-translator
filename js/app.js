@@ -822,7 +822,8 @@
       return;
     }
 
-    // Calculate scale: the video/image is object-fit:contain within the fullscreen area
+    // Calculate scale: the video/image uses object-fit:contain
+    // The image fits entirely within the display, centered, with bars on sides or top/bottom
     const displayW = window.innerWidth;
     const displayH = window.innerHeight;
     const sourceAspect = sourceW / sourceH;
@@ -830,22 +831,24 @@
     let renderW, renderH, offsetX, offsetY;
 
     if (sourceAspect > displayAspect) {
-      renderH = displayH;
-      renderW = renderH * sourceAspect;
-      offsetX = (renderW - displayW) / 2;
-      offsetY = 0;
-    } else {
+      // Image is wider → fit to width, bars on top/bottom
       renderW = displayW;
-      renderH = renderW / sourceAspect;
+      renderH = displayW / sourceAspect;
       offsetX = 0;
-      offsetY = (renderH - displayH) / 2;
+      offsetY = (displayH - renderH) / 2;
+    } else {
+      // Image is taller → fit to height, bars on left/right
+      renderH = displayH;
+      renderW = displayH * sourceAspect;
+      offsetX = (displayW - renderW) / 2;
+      offsetY = 0;
     }
 
     const scaleX = sourceW / renderW;
     const scaleY = sourceH / renderH;
 
-    let sx = (rect.left + offsetX) * scaleX;
-    let sy = (rect.top + offsetY) * scaleY;
+    let sx = (rect.left - offsetX) * scaleX;
+    let sy = (rect.top - offsetY) * scaleY;
     let sw = rect.width * scaleX;
     let sh = rect.height * scaleY;
 
