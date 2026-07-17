@@ -1,4 +1,4 @@
-// OCR Engine - PaddleOCR via esearch-ocr (CDN) + Tesseract.js
+// OCR Engine - PaddleOCR via esearch-ocr (CDN)
 // Ported from Chrome extension's page-ocr.js, getImage.js, and translator.js
 
 const OCR = (function() {
@@ -58,10 +58,7 @@ const OCR = (function() {
     ro: 'latin', bg: 'latin', el: 'latin', ms: 'latin'
   };
 
-  // Tesseract state
-  let tessWorker = null;
-  let tessLang = null;
-  let checkCloseByHeight = true;
+
 
   // ==================== PaddleOCR (esearch-ocr CDN) ====================
 
@@ -675,152 +672,9 @@ const OCR = (function() {
     });
   }
 
-  // ==================== Tesseract OCR ====================
-
-  async function loadLibrary(src, type) {
-    return new Promise(function(resolve, reject) {
-      const scriptEle = document.createElement('script');
-      scriptEle.setAttribute('type', type);
-      scriptEle.setAttribute('src', src);
-      document.body.appendChild(scriptEle);
-      scriptEle.addEventListener('load', function() {
-        console.log(src + ' loaded');
-        resolve(true);
-      });
-      scriptEle.addEventListener('error', function(ev) {
-        console.log('Error on loading ' + src, ev);
-        reject(ev);
-      });
-    });
-  }
-
-  async function initTess(lang) {
-    if (lang.indexOf('vert') !== -1) {
-      checkCloseByHeight = false;
-    } else {
-      checkCloseByHeight = true;
-    }
-    if (!tessWorker) {
-      if (typeof Tesseract === 'undefined') {
-        await loadLibrary('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js', 'text/javascript');
-      }
-    }
-    if (!tessLang || lang !== tessLang) {
-      tessLang = lang;
-      if (tessWorker) {
-        await tessWorker.terminate();
-      }
-      tessWorker = await Tesseract.createWorker(lang, 1, {
-        logger: function(m) { console.log(m); }
-      });
-      if (lang.indexOf('vert') !== -1) {
-        await tessWorker.setParameters({
-          tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK_VERT_TEXT
-        });
-      }
-    }
-  }
-
-  function areBoxesClose(mergedBox, box2) {
-    if (checkCloseByHeight) {
-      const box1Bottom = mergedBox.geometry.Y + mergedBox.geometry.height;
-      const box1Left = mergedBox.geometry.X;
-      const box1Right = mergedBox.geometry.X + mergedBox.geometry.width;
-      const box2Height = box2.geometry.height;
-      const box2Top = box2.geometry.Y;
-      const box2Left = box2.geometry.X;
-      const box2Right = box2.geometry.X + box2.geometry.width;
-      if (box1Bottom + box2Height * 3 - box2Top > 0) {
-        if (box1Left > box2Left) {
-          if (box1Left < box2Right) return true;
-        } else {
-          if (box2Left < box1Right) return true;
-        }
-      }
-    } else {
-      return true;
-    }
-    return false;
-  }
-
-  function clusterBoxes(boxes, baseBox) {
-    let merged = false;
-    for (let index = boxes.length - 1; index >= 0; index--) {
-      const box = boxes[index];
-      if (areBoxesClose(baseBox, box)) {
-        baseBox = mergedBoxesRect([baseBox, box]);
-        merged = true;
-        boxes.splice(index, 1);
-      }
-    }
-    if (merged) return [baseBox];
-    return undefined;
-  }
-
-  function mergedBoxesRect(boxes) {
-    const merged = JSON.parse(JSON.stringify(boxes[0]));
-    let minX = boxes[0].geometry.X;
-    let minY = boxes[0].geometry.Y;
-    let maxX = 0, maxY = 0;
-    boxes.forEach(function(box) {
-      minX = Math.min(minX, box.geometry.X);
-      minY = Math.min(minY, box.geometry.Y);
-      maxX = Math.max(maxX, box.geometry.X + box.geometry.width);
-      maxY = Math.max(maxY, box.geometry.Y + box.geometry.height);
-    });
-    merged.geometry.X = minX;
-    merged.geometry.Y = minY;
-    merged.geometry.width = maxX - minX;
-    merged.geometry.height = maxY - minY;
-    merged.text = boxes.map(function(b) { return b.text; }).join('\n').replace(/\n{1,}/g, '\n');
-    return merged;
-  }
-
-  function mergedBoxes(boxes) {
-    const grouped = [];
-    while (boxes.length > 0) {
-      const box = boxes.splice(0, 1)[0];
-      const clustered = clusterBoxes(boxes, box);
-      if (clustered) {
-        grouped.push(clustered);
-      } else {
-        grouped.push([box]);
-      }
-    }
-    const result = [];
-    grouped.forEach(function(group) {
-      result.push(mergedBoxesRect(group));
-    });
-    return result;
-  }
-
-  async function tessOCR(image) {
-    const ret = await tessWorker.recognize(image);
-    const boxes = [];
-    ret.data.lines.forEach(function(line) {
-      if (line.confidence > 10) {
-        boxes.push({
-          text: line.text,
-          target: '',
-          geometry: {
-            X: line.bbox.x0,
-            Y: line.bbox.y0,
-            width: line.bbox.x1 - line.bbox.x0,
-            height: line.bbox.y1 - line.bbox.y0
-          }
-        });
-      }
-    });
-    return { boxes: mergedBoxes(boxes) };
-  }
-
-  // ==================== Public API ====================
-
   return {
     initPaddle: initPaddle,
     paddleOCR: paddleOCR,
-    initTess: initTess,
-    tessOCR: tessOCR,
     isPaddleReady: function() { return paddleReady; },
     getPaddleLang: function() { return paddleCurrentLang; }
   };

@@ -36,7 +36,6 @@ const DEFAULTS = {
   // Online translator specific
   engine: 'imagetrans',
   paddleOCRLang: 'chs',
-  tessOCRLang: 'jpn_vert',
   useTargetImage: false,
   renderTranslation: true,
   template: 'general',
@@ -229,7 +228,6 @@ const I18N = {
     engine_label: 'Engine',
     engine_imagetrans: 'ImageTrans',
     engine_paddle: 'PaddleOCR',
-    engine_tesseract: 'Tesseract',
   },
   zh: {
     tab_translate: '翻译',
@@ -320,7 +318,6 @@ const I18N = {
     engine_label: '引擎',
     engine_imagetrans: 'ImageTrans',
     engine_paddle: 'PaddleOCR',
-    engine_tesseract: 'Tesseract',
   }
 };
 
@@ -356,18 +353,6 @@ const PADDLE_LANGS = [
   {name: 'Japanese', code: 'ja'},
   {name: 'Korean', code: 'ko'},
   {name: 'Chinese Traditional', code: 'cht'}
-];
-
-// Tesseract language options
-const TESS_LANGS = [
-  {name: 'Japanese vertical', code: 'jpn_vert'},
-  {name: 'Japanese', code: 'jpn'},
-  {name: 'Korean', code: 'kor'},
-  {name: 'Chinese vertical', code: 'chi_sim_vert'},
-  {name: 'Chinese', code: 'chi_sim'},
-  {name: 'English', code: 'eng'},
-  {name: 'French', code: 'fra'},
-  {name: 'Italian', code: 'ita'}
 ];
 
 // Initialize settings on load
