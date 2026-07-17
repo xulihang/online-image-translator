@@ -564,7 +564,10 @@
       if (translateImgTarget.src && translateImgTarget.src !== window.location.href) {
         translateImgSource.style.display = 'none';
         translateImgTarget.style.display = '';
-        Render.showTextOverlay(translateContainer);
+        // Only show overlay text if there's no separate rendered image
+        if (translateImgTarget.src === translateImgSource.src) {
+          Render.showTextOverlay(translateContainer);
+        }
       }
     } else {
       translateImgSource.style.display = '';
