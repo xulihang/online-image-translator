@@ -740,7 +740,7 @@ const OCR = (function() {
     const w = info.w, h = info.h;
     const useYOLO = Settings.get('useYOLODetection') ||
       (Settings.get('useYOLOForJapanese') && (sourceLang || 'auto') === 'ja');
-    const yoloUrl = 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/YOLOv8/det/manga_det.onnx';
+    const yoloUrl = 'https://modelscope.cn/models/xulihang/ImageTrans/resolve/master/model.onnx';
 
     if (h / w <= 4) {
       // Normal case: downscale and OCR
