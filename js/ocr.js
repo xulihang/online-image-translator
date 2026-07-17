@@ -8,37 +8,43 @@ const OCR = (function() {
   let paddleCurrentLang = null;
   let paddleInitPromise = null;
 
-  // PaddleOCR model URL mapping (from Chrome extension)
+  // PP-OCRv6 models from ModelScope CDN (mirrors Chrome extension's local model logic)
+  // Default (zh/en/etc.): tiny det + tiny rec + tiny dict
+  // Japanese: tiny det + small rec + small dict
+  // Other languages: v5/v4 language-specific rec models, fallback to default tiny det
+  const PADDLE_CDN_BASE = 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.9.1';
+  const PADDLE_CDN_BASE_V5 = 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0';
   const PADDLE_MODEL_URLS = {
-    defaultv5: {
-      det: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/PP-OCRv5/det/ch_PP-OCRv5_mobile_det.onnx',
-      rec: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/PP-OCRv5/rec/ch_PP-OCRv5_rec_mobile_infer.onnx',
-      dict: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/paddle/PP-OCRv5/rec/ch_PP-OCRv5_rec_mobile_infer/ppocrv5_dict.txt'
+    default: {
+      det: PADDLE_CDN_BASE + '/onnx/PP-OCRv6/det/PP-OCRv6_det_tiny.onnx',
+      rec: PADDLE_CDN_BASE + '/onnx/PP-OCRv6/rec/PP-OCRv6_rec_tiny.onnx',
+      dict: PADDLE_CDN_BASE + '/paddle/PP-OCRv6/rec/PP-OCRv6_rec_tiny/ppocrv6_tiny_dict.txt'
     },
     japanese: {
-      rec: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/PP-OCRv5/rec/japan_PP-OCRv5_rec_mobile_infer.onnx',
-      dict: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/paddle/PP-OCRv5/rec/japan_PP-OCRv5_rec_mobile_infer/ppocrv5_japan_dict.txt'
+      det: PADDLE_CDN_BASE + '/onnx/PP-OCRv6/det/PP-OCRv6_det_tiny.onnx',
+      rec: PADDLE_CDN_BASE + '/onnx/PP-OCRv6/rec/PP-OCRv6_rec_small.onnx',
+      dict: PADDLE_CDN_BASE + '/paddle/PP-OCRv6/rec/PP-OCRv6_rec_small/ppocrv6_dict.txt'
     },
     arabic: {
-      det: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/PP-OCRv4/det/Multilingual_PP-OCRv3_det_infer.onnx',
-      rec: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/master/onnx/PP-OCRv5/rec/arabic_PP-OCRv5_rec_mobile.onnx',
-      dict: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/master/paddle/PP-OCRv5/rec/arabic_PP-OCRv5_rec_mobile/ppocrv5_arabic_dict.txt'
+      det: PADDLE_CDN_BASE_V5 + '/onnx/PP-OCRv4/det/Multilingual_PP-OCRv3_det_infer.onnx',
+      rec: PADDLE_CDN_BASE_V5 + '/onnx/PP-OCRv5/rec/arabic_PP-OCRv5_rec_mobile.onnx',
+      dict: PADDLE_CDN_BASE_V5 + '/paddle/PP-OCRv5/rec/arabic_PP-OCRv5_rec_mobile/ppocrv5_arabic_dict.txt'
     },
     korean: {
-      rec: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/PP-OCRv5/rec/korean_PP-OCRv5_rec_mobile_infer.onnx',
-      dict: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/paddle/PP-OCRv5/rec/korean_PP-OCRv5_rec_mobile_infer/ppocrv5_korean_dict.txt'
+      rec: PADDLE_CDN_BASE_V5 + '/onnx/PP-OCRv5/rec/korean_PP-OCRv5_rec_mobile_infer.onnx',
+      dict: PADDLE_CDN_BASE_V5 + '/paddle/PP-OCRv5/rec/korean_PP-OCRv5_rec_mobile_infer/ppocrv5_korean_dict.txt'
     },
     latin: {
-      rec: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/PP-OCRv5/rec/latin_PP-OCRv5_rec_mobile_infer.onnx',
-      dict: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/paddle/PP-OCRv5/rec/latin_PP-OCRv5_rec_mobile_infer/ppocrv5_latin_dict.txt'
+      rec: PADDLE_CDN_BASE_V5 + '/onnx/PP-OCRv5/rec/latin_PP-OCRv5_rec_mobile_infer.onnx',
+      dict: PADDLE_CDN_BASE_V5 + '/paddle/PP-OCRv5/rec/latin_PP-OCRv5_rec_mobile_infer/ppocrv5_latin_dict.txt'
     },
     eslav: {
-      rec: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/PP-OCRv5/rec/eslav_PP-OCRv5_rec_mobile_infer.onnx',
-      dict: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/paddle/PP-OCRv5/rec/eslav_PP-OCRv5_rec_mobile_infer/ppocrv5_eslav_dict.txt'
+      rec: PADDLE_CDN_BASE_V5 + '/onnx/PP-OCRv5/rec/eslav_PP-OCRv5_rec_mobile_infer.onnx',
+      dict: PADDLE_CDN_BASE_V5 + '/paddle/PP-OCRv5/rec/eslav_PP-OCRv5_rec_mobile_infer/ppocrv5_eslav_dict.txt'
     },
     th: {
-      rec: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/onnx/PP-OCRv5/rec/th_PP-OCRv5_rec_mobile_infer.onnx',
-      dict: 'https://www.modelscope.cn/models/RapidAI/RapidOCR/resolve/v3.4.0/paddle/PP-OCRv5/rec/th_PP-OCRv5_rec_mobile_infer/ppocrv5_th_dict.txt'
+      rec: PADDLE_CDN_BASE_V5 + '/onnx/PP-OCRv5/rec/th_PP-OCRv5_rec_mobile_infer.onnx',
+      dict: PADDLE_CDN_BASE_V5 + '/paddle/PP-OCRv5/rec/th_PP-OCRv5_rec_mobile_infer/ppocrv5_th_dict.txt'
     }
   };
 
@@ -52,32 +58,6 @@ const OCR = (function() {
     ro: 'latin', bg: 'latin', el: 'latin', ms: 'latin'
   };
 
-  // CDN-based PaddleOCR models (simpler approach used by existing online translator)
-  const PADDLE_CDN_MODELS = {
-    chs: {
-      model: 'ppocr_rec.onnx',
-      dic: 'ppocr_keys_v1.txt'
-    },
-    en: {
-      model: 'rec_en_PP-OCRv3_infer.onnx',
-      dic: 'dict_en.txt'
-    },
-    ja: {
-      model: 'rec_japan_PP-OCRv3_infer.onnx',
-      dic: 'dict_japan.txt'
-    },
-    ko: {
-      model: 'rec_korean_PP-OCRv3_infer.onnx',
-      dic: 'dict_korean.txt'
-    },
-    cht: {
-      model: 'rec_chinese_cht_PP-OCRv3_infer.onnx',
-      dic: 'dict_chinese_cht.txt'
-    }
-  };
-
-  const PADDLE_ASSETS_BASE = 'https://cdn.jsdelivr.net/npm/paddleocr-browser/dist/';
-
   // Tesseract state
   let tessWorker = null;
   let tessLang = null;
@@ -87,20 +67,12 @@ const OCR = (function() {
 
   function getPaddleModelInfo(sourceLang) {
     const modelKey = PADDLE_LANG_TO_MODEL[sourceLang] || 'default';
-    const modelInfo = PADDLE_MODEL_URLS[modelKey];
-    if (modelInfo) {
-      return {
-        modelKey: modelKey,
-        detUrl: modelInfo.det || PADDLE_MODEL_URLS['defaultv5'].det,
-        recUrl: modelInfo.rec,
-        dicUrl: modelInfo.dict
-      };
-    }
+    const modelInfo = PADDLE_MODEL_URLS[modelKey] || PADDLE_MODEL_URLS['default'];
     return {
-      modelKey: 'default',
-      detUrl: PADDLE_MODEL_URLS['defaultv5'].det,
-      recUrl: PADDLE_MODEL_URLS['defaultv5'].rec,
-      dicUrl: PADDLE_MODEL_URLS['defaultv5'].dict
+      modelKey: modelKey,
+      detUrl: modelInfo.det,
+      recUrl: modelInfo.rec,
+      dicUrl: modelInfo.dict
     };
   }
 
