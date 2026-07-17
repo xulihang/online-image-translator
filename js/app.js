@@ -36,12 +36,6 @@
   let scanResults = null;
   let scanFileInput = null;
 
-  // Viewer tab
-  let viewerImgs = [];
-  let viewerContainer = null;
-  let viewerDropZone = null;
-  let viewerFileInput = null;
-
   // Settings tab
   let settingsForm = null;
 
@@ -61,8 +55,6 @@
     setupTranslateTab();
     // Set up Scan tab
     setupScanTab();
-    // Set up Viewer tab
-    setupViewerTab();
     // Set up Settings tab
     setupSettingsTab();
     // Set up text modal
@@ -78,11 +70,11 @@
 
   function cacheDOMElements() {
     // Tab buttons
-    ['translate', 'scan', 'settings', 'viewer'].forEach(function(id) {
+    ['translate', 'scan', 'settings'].forEach(function(id) {
       tabButtons[id] = $('#tab-' + id);
     });
     // Tab panels
-    ['translate', 'scan', 'settings', 'viewer'].forEach(function(id) {
+    ['translate', 'scan', 'settings'].forEach(function(id) {
       tabPanels[id] = $('#panel-' + id);
     });
 
@@ -101,11 +93,6 @@
     scanCanvas = $('#scan-canvas');
     scanResults = $('#scan-results');
     scanFileInput = $('#scan-file-input');
-
-    // Viewer
-    viewerContainer = $('#viewer-container');
-    viewerDropZone = $('#viewer-drop-zone');
-    viewerFileInput = $('#viewer-file-input');
 
     // Settings
     settingsForm = $('#settings-form');
@@ -711,100 +698,6 @@
       targetText += (t.engine ? t.engine + ': ' : '') + t.text;
     });
     showTextModal(sourceText, targetText);
-  }
-
-  // ==================== Viewer Tab ====================
-
-  function setupViewerTab() {
-    if (viewerDropZone) {
-      viewerDropZone.addEventListener('click', function() {
-        if (viewerFileInput) viewerFileInput.click();
-      });
-    }
-
-    if (viewerFileInput) {
-      viewerFileInput.addEventListener('change', function() {
-        loadViewerFiles(viewerFileInput.files);
-      });
-    }
-
-    // Drag and drop
-    document.addEventListener('dragover', function(e) { e.preventDefault(); });
-    document.addEventListener('drop', function(e) {
-      e.preventDefault();
-      if (tabPanels['viewer'] && !tabPanels['viewer'].classList.contains('hidden')) {
-        if (e.dataTransfer.files.length > 0) {
-          loadViewerFiles(e.dataTransfer.files);
-        }
-      }
-    });
-
-    // Paste
-    document.addEventListener('paste', function(e) {
-      if (tabPanels['viewer'] && !tabPanels['viewer'].classList.contains('hidden')) {
-        if (e.clipboardData.files.length > 0) {
-          e.preventDefault();
-          loadViewerFiles(e.clipboardData.files);
-        }
-      }
-    });
-
-    // Keyboard navigation
-    document.addEventListener('keydown', function(e) {
-      if (tabPanels['viewer'] && tabPanels['viewer'].classList.contains('hidden')) return;
-      if (!viewerImgs.length) return;
-      const vh = window.innerHeight;
-      const step = vh * 0.85;
-      const viewer = $('#viewer-scroll');
-      if (!viewer) return;
-
-      switch (e.key) {
-        case 'ArrowDown': case 'j':
-          e.preventDefault();
-          viewer.scrollBy({ top: step, behavior: 'smooth' });
-          break;
-        case 'ArrowUp': case 'k':
-          e.preventDefault();
-          viewer.scrollBy({ top: -step, behavior: 'smooth' });
-          break;
-        case ' ':
-          e.preventDefault();
-          viewer.scrollBy({ top: e.shiftKey ? -(vh - 80) : (vh - 80), behavior: 'smooth' });
-          break;
-        case 'Home':
-          e.preventDefault();
-          viewer.scrollTo({ top: 0, behavior: 'smooth' });
-          break;
-        case 'End':
-          e.preventDefault();
-          viewer.scrollTo({ top: viewer.scrollHeight, behavior: 'smooth' });
-          break;
-      }
-    });
-  }
-
-  function loadViewerFiles(files) {
-    const sorted = Array.from(files)
-      .filter(function(f) { return f.type.startsWith('image/'); })
-      .sort(function(a, b) { return a.name.localeCompare(b.name, undefined, { numeric: true }); });
-
-    if (!sorted.length) return;
-    viewerImgs = sorted;
-    renderViewer();
-    if (viewerDropZone) viewerDropZone.classList.add('hidden');
-  }
-
-  function renderViewer() {
-    if (!viewerContainer) return;
-    viewerContainer.innerHTML = '';
-    viewerImgs.forEach(function(file, i) {
-      const url = URL.createObjectURL(file);
-      const img = document.createElement('img');
-      img.src = url;
-      img.alt = file.name;
-      img.title = (i + 1) + ' / ' + viewerImgs.length + '  ' + file.name;
-      viewerContainer.appendChild(img);
-    });
   }
 
   // ==================== Settings Tab ====================

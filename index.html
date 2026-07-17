@@ -344,44 +344,6 @@
     }
     .btn-sm { padding: 4px 10px; font-size: 12px; }
 
-    /* ===== Viewer Tab ===== */
-    .viewer-layout {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    #viewer-scroll {
-      flex: 1;
-      overflow-y: scroll;
-      scroll-behavior: smooth;
-    }
-    #viewer-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px;
-      gap: 8px;
-    }
-    #viewer-container img {
-      display: block;
-      max-width: min(95vw, 1200px);
-      height: auto;
-      background: #fff;
-      box-shadow: var(--shadow);
-      border-radius: 2px;
-    }
-    .viewer-drop-zone {
-      border: 2px dashed #ccc;
-      border-radius: 8px;
-      padding: 48px;
-      text-align: center;
-      color: #999;
-      cursor: pointer;
-      margin: 32px auto;
-      max-width: 500px;
-    }
-    .viewer-drop-zone:hover { border-color: var(--primary); color: var(--primary); }
-    .viewer-drop-zone.hidden { display: none; }
 
     /* ===== Text Modal ===== */
     .text-modal {
@@ -451,7 +413,6 @@
   <button class="tab-btn active" id="tab-translate" data-i18n="tab_translate">Translate</button>
   <button class="tab-btn" id="tab-scan" data-i18n="tab_scan">Scan</button>
   <button class="tab-btn" id="tab-settings" data-i18n="tab_settings">Settings</button>
-  <button class="tab-btn" id="tab-viewer" data-i18n="tab_viewer">Viewer</button>
 </div>
 
 <!-- Main Content -->
@@ -653,20 +614,6 @@
     </div>
   </div>
 
-  <!-- ===== Viewer Tab ===== -->
-  <div class="tab-panel hidden" id="panel-viewer">
-    <div class="viewer-layout">
-      <div class="viewer-drop-zone" id="viewer-drop-zone">
-        <div style="font-size:48px;margin-bottom:12px;">🖼️</div>
-        <div>Click to select images, or drag &amp; drop</div>
-        <div style="font-size:12px;opacity:0.6;margin-top:8px;">Arrow keys to scroll · Space to page</div>
-      </div>
-      <div id="viewer-scroll">
-        <div id="viewer-container"></div>
-      </div>
-    </div>
-    <input type="file" id="viewer-file-input" multiple accept="image/*" style="display:none;" />
-  </div>
 
 </div>
 
