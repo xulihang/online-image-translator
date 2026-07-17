@@ -480,12 +480,12 @@
       padding: 10px;
       font-size: 15px;
       font-weight: 600;
-      margin-bottom: 16px;
+      margin-top: 16px;
       position: sticky;
-      top: 0;
+      bottom: 0;
       z-index: 10;
       background: var(--primary);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
     }
     .btn-sm { padding: 4px 10px; font-size: 12px; }
 
@@ -669,7 +669,6 @@
   <!-- ===== Settings Tab ===== -->
   <div class="tab-panel hidden" id="panel-settings">
     <div class="settings-layout">
-      <button class="btn-primary btn-save" id="btn-settings-save" data-i18n="settings_save">Save Settings</button>
       <div class="settings-card">
         <div class="settings-card-title" data-i18n="settings_translation">Translation</div>
         <div class="form-row">
@@ -813,6 +812,7 @@
         </div>
       </div>
 
+      <button class="btn-primary btn-save" id="btn-settings-save" data-i18n="settings_save">Save Settings</button>
     </div>
   </div>
 
