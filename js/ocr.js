@@ -743,12 +743,24 @@ const OCR = (function() {
     const yoloUrl = 'https://modelscope.cn/models/xulihang/ImageTrans/resolve/master/model.onnx';
 
     if (h / w <= 4) {
-      // Normal case: downscale and OCR
+      // Normal case: downscale and OCR, then scale boxes back to original size
       const result = await downscaleDataURL(imageDataURL, 1500);
+      const scale = result.scale || 1;
+      let boxes;
       if (useYOLO) {
-        return doPaddleOCRYolo(result.dataURL, sourceLang, yoloUrl);
+        boxes = await doPaddleOCRYolo(result.dataURL, sourceLang, yoloUrl);
+      } else {
+        boxes = await doPaddleOCR(result.dataURL, sourceLang);
       }
-      return doPaddleOCR(result.dataURL, sourceLang);
+      if (scale !== 1) {
+        boxes.forEach(function(box) {
+          box.geometry.X = Math.round(box.geometry.X / scale);
+          box.geometry.Y = Math.round(box.geometry.Y / scale);
+          box.geometry.width = Math.round(box.geometry.width / scale);
+          box.geometry.height = Math.round(box.geometry.height / scale);
+        });
+      }
+      return boxes;
     }
 
     // Tall image: split into parts
@@ -767,9 +779,18 @@ const OCR = (function() {
         const partDataURL = c.toDataURL('image/jpeg', 0.9);
         promises.push(
           downscaleDataURL(partDataURL, 1500).then(function(result) {
+            const scale = result.scale || 1;
             return (useYOLO ? doPaddleOCRYolo(result.dataURL, sourceLang, yoloUrl) : doPaddleOCR(result.dataURL, sourceLang))
               .then(function(boxes) {
                 for (let j = 0; j < boxes.length; j++) {
+                  // Scale back from downscaled space to original part space
+                  if (scale !== 1) {
+                    boxes[j].geometry.X = Math.round(boxes[j].geometry.X / scale);
+                    boxes[j].geometry.Y = Math.round(boxes[j].geometry.Y / scale);
+                    boxes[j].geometry.width = Math.round(boxes[j].geometry.width / scale);
+                    boxes[j].geometry.height = Math.round(boxes[j].geometry.height / scale);
+                  }
+                  // Offset to full-image coordinates
                   boxes[j].geometry.Y += sy;
                 }
                 return boxes;

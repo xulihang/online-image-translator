@@ -372,17 +372,22 @@ const Render = (function() {
     overlay.className = 'text-overlay';
     overlay.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
 
-    const imgWidth = imgElement.naturalWidth || imgElement.width;
-    const displayWidth = imgElement.clientWidth;
-    const ratio = displayWidth / imgWidth;
+    // Use getBoundingClientRect for accurate rendered size, separate X/Y ratios
+    const rect = imgElement.getBoundingClientRect();
+    const displayW = rect.width || imgElement.clientWidth || imgElement.offsetWidth || 1;
+    const displayH = rect.height || imgElement.clientHeight || imgElement.offsetHeight || 1;
+    const natW = imgElement.naturalWidth || imgElement.width || 1;
+    const natH = imgElement.naturalHeight || imgElement.height || 1;
+    const ratioX = displayW / natW / scale;
+    const ratioY = displayH / natH / scale;
 
     for (let i = 0; i < boxes.length; i++) {
       const box = boxes[i];
       const geo = box.geometry || {};
-      const left = Math.ceil(ratio * geo.X / scale);
-      const top = Math.ceil(ratio * geo.Y / scale);
-      const width = Math.ceil(ratio * geo.width / scale);
-      const height = Math.ceil(ratio * geo.height / scale);
+      const left = Math.ceil(ratioX * (geo.X || geo.x || 0));
+      const top = Math.ceil(ratioY * (geo.Y || geo.y || 0));
+      const width = Math.ceil(ratioX * (geo.width || geo.Width || 0));
+      const height = Math.ceil(ratioY * (geo.height || geo.Height || 0));
 
       const boxDiv = document.createElement('div');
       boxDiv.className = 'text-box';

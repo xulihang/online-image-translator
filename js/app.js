@@ -143,6 +143,25 @@
     });
   }
 
+  // Wait for an image to finish loading and browser to complete layout
+  function waitForImageLayout(img) {
+    return new Promise(function(resolve) {
+      if (img.complete && img.naturalWidth > 0) {
+        // Image already loaded, wait one frame for layout
+        requestAnimationFrame(function() {
+          requestAnimationFrame(resolve);
+        });
+      } else {
+        img.onload = function() {
+          requestAnimationFrame(function() {
+            requestAnimationFrame(resolve);
+          });
+        };
+        img.onerror = resolve;
+      }
+    });
+  }
+
   // ==================== First-run Setup Modal ====================
 
   function showSetupModal() {
@@ -415,17 +434,6 @@
       });
     }
 
-    // Target image load handler
-    if (translateImgTarget) {
-      translateImgTarget.addEventListener('load', function() {
-        if (translateBoxes.length > 0 && translateImgTarget.src !== translateImgSource.src) {
-          // ImageTrans returned a translated image with boxes
-          Render.createTextOverlay(translateContainer, translateBoxes, translateImgTarget, translateScale);
-          if (translateShowChk) translateShowChk.checked = true;
-          toggleTranslatedView(true);
-        }
-      });
-    }
   }
 
   function loadTranslateImage(file) {
@@ -513,24 +521,27 @@
       translateBoxes = result.boxes;
 
       if (result.translatedImage && !result.renderTextInFrontend) {
-        // Server returned a rendered image
+        // Server returned a rendered image - wait for it to load + layout
         if (translateImgTarget) {
           translateImgTarget.src = result.translatedImage;
+          translateImgTarget.style.display = '';
+          await waitForImageLayout(translateImgTarget);
         }
+        if (translateImgSource) translateImgSource.style.display = 'none';
+        Render.createTextOverlay(translateContainer, result.boxes, translateImgTarget, 1.0);
+        if (translateShowChk) translateShowChk.checked = true;
       } else if (result.boxes.length > 0) {
-        // Render text on canvas
+        // Render text on canvas, wait for image load + layout, then create overlay
         const renderedDataURL = await Render.renderTranslatedImage(finalDataURL, result.boxes);
         if (translateImgTarget) {
           translateImgTarget.src = renderedDataURL;
+          translateImgTarget.style.display = '';
+          await waitForImageLayout(translateImgTarget);
         }
         if (translateImgSource) {
           translateImgSource.style.display = 'none';
         }
-        if (translateImgTarget) {
-          translateImgTarget.style.display = '';
-        }
-        // Create text overlay for click-to-inspect
-        Render.createTextOverlay(translateContainer, result.boxes, translateImgTarget, translateScale);
+        Render.createTextOverlay(translateContainer, result.boxes, translateImgTarget, 1.0);
         if (translateShowChk) translateShowChk.checked = true;
       }
 
