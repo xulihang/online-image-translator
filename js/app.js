@@ -176,14 +176,17 @@
 
     // TTS button
     const ttsBtn = textModal.querySelector('.modal-tts-btn');
+    const ttsSelect = $('#modal-tts-select');
     if (ttsBtn) {
       ttsBtn.addEventListener('click', function(e) {
         e.stopPropagation();
         const sourceText = textModal.getAttribute('data-source-text') || '';
-        const ttsVoice = Settings.get('tts');
         let voice;
-        if (ttsVoice && typeof getVoiceByName === 'function') {
-          voice = getVoiceByName(ttsVoice);
+        if (ttsSelect && ttsSelect.selectedIndex >= 0) {
+          const voiceName = ttsSelect.options[ttsSelect.selectedIndex].getAttribute('data-name');
+          if (voiceName && typeof getVoiceByName === 'function') {
+            voice = getVoiceByName(voiceName);
+          }
         }
         if (typeof speak === 'function') {
           speak(sourceText, voice);
@@ -214,7 +217,43 @@
     const targetEl = textModal.querySelector('.modal-target');
     if (sourceEl) sourceEl.textContent = sourceText;
     if (targetEl) targetEl.textContent = targetText;
+
+    // Populate TTS voice selector
+    populateModalTTSSelect();
+
     textModal.style.display = 'flex';
+  }
+
+  function populateModalTTSSelect() {
+    const ttsSelect = $('#modal-tts-select');
+    if (!ttsSelect) return;
+    ttsSelect.innerHTML = '';
+    if (typeof loadVoices === 'function') loadVoices();
+    const savedVoice = Settings.get('tts');
+    // voices is global from tts.js
+    const voiceList = (typeof voices !== 'undefined') ? voices : [];
+    if (voiceList.length === 0) {
+      // Try to load voices synchronously
+      if (typeof speechSynthesis !== 'undefined') {
+        const synVoices = speechSynthesis.getVoices();
+        synVoices.forEach(function(v) { voiceList.push(v); });
+      }
+    }
+    voiceList.forEach(function(v) {
+      const opt = document.createElement('option');
+      opt.textContent = v.name + ' (' + v.lang + ')';
+      opt.setAttribute('data-name', v.name);
+      if (!savedVoice && v.default) opt.selected = true;
+      if (savedVoice && v.name === savedVoice) opt.selected = true;
+      ttsSelect.appendChild(opt);
+    });
+    // Save selected voice on change
+    ttsSelect.onchange = function() {
+      if (ttsSelect.selectedIndex >= 0) {
+        const name = ttsSelect.options[ttsSelect.selectedIndex].getAttribute('data-name');
+        if (name) Settings.set('tts', name);
+      }
+    };
   }
 
   // ==================== Translate Tab ====================
