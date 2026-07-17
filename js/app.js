@@ -259,6 +259,15 @@
   // ==================== Translate Tab ====================
 
   function setupTranslateTab() {
+    // Select Image button
+    const selectImgBtn = $('#btn-select-image');
+    if (selectImgBtn && translateFileInput) {
+      selectImgBtn.addEventListener('click', function() {
+        translateFileInput.value = ''; // Reset so same file can be re-selected
+        translateFileInput.click();
+      });
+    }
+
     // File input
     if (translateFileInput) {
       translateFileInput.addEventListener('change', function() {
@@ -341,19 +350,22 @@
     const reader = new FileReader();
     reader.onload = function(e) {
       translateOriginalDataURL = e.target.result;
+      // Reset target image
+      if (translateImgTarget) {
+        translateImgTarget.src = '';
+        translateImgTarget.style.display = 'none';
+      }
       if (translateImgSource) {
         translateImgSource.src = e.target.result;
         translateImgSource.style.display = '';
       }
-      if (translateImgTarget) {
-        translateImgTarget.style.display = 'none';
-      }
-      // Clear overlay
-      if (translateOverlay) {
-        translateOverlay.innerHTML = '';
-      }
+      // Clear overlay boxes (re-query since createTextOverlay replaces the element)
+      const overlay = translateContainer ? translateContainer.querySelector('.text-overlay') : null;
+      if (overlay) overlay.remove();
       translateBoxes = [];
       translateScale = 1.0;
+      // Reset checkbox
+      if (translateShowChk) translateShowChk.checked = false;
       // Hide drop zone
       if (translateDropZone) translateDropZone.classList.add('hidden');
     };
@@ -1173,10 +1185,13 @@
     init();
   }
 
-  // Window resize handler for scan region
+  // Window resize handler - update scan selection on resize
   window.addEventListener('resize', function() {
-    if (scanActive) {
-      drawScanRegion();
+    if (scanFullscreen && scanFullscreen.classList.contains('active') && scanRect) {
+      // Re-clamp the selection rectangle to new viewport
+      const newLeft = Math.max(0, Math.min(window.innerWidth - scanRect.width, scanRect.left));
+      const newTop = Math.max(0, Math.min(window.innerHeight - scanRect.height, scanRect.top));
+      applyScanRect({ left: newLeft, top: newTop, width: scanRect.width, height: scanRect.height });
     }
   });
 
