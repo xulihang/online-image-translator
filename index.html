@@ -429,6 +429,53 @@
     .btn-sm { padding: 4px 10px; font-size: 12px; }
 
 
+    /* ===== Setup Modal ===== */
+    .setup-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10001;
+    }
+    .setup-modal-content {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 24px;
+      max-width: 520px;
+      width: 92%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .setup-modal-content h2 { font-size: 18px; margin-bottom: 4px; }
+    .setup-section { margin-bottom: 14px; }
+    .setup-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 6px; }
+    .setup-options { display: flex; flex-direction: column; gap: 8px; }
+    .setup-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .setup-option:hover { border-color: var(--primary); }
+    .setup-option input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; }
+    .setup-option-content strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .setup-option-content span { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+    .setup-option.selected { border-color: var(--primary); background: rgba(74,108,247,0.04); }
+    .setup-row { display: flex; gap: 10px; align-items: center; }
+    .setup-row label { font-size: 13px; color: var(--text-secondary); }
+    .setup-row select { flex: 1; }
+    @media (max-width: 600px) {
+      .setup-modal-content { padding: 20px 14px; }
+      .setup-option { padding: 10px; }
+    }
+
     /* ===== Text Modal ===== */
     .text-modal {
       position: fixed;
@@ -709,6 +756,52 @@
 <div class="status-mask" id="status-mask">
   <div class="status-spinner"></div>
   <div class="status-text" id="status-text">Translating...</div>
+</div>
+
+<!-- First-run Setup Modal -->
+<div class="setup-modal" id="setup-modal">
+  <div class="setup-modal-content">
+    <h2>Welcome to Online Image Translator</h2>
+    <p style="color:var(--text-secondary);margin-bottom:16px;">Choose your translation method and languages to get started.</p>
+
+    <div class="setup-section">
+      <div class="setup-label">Translation Method</div>
+      <div class="setup-options">
+        <label class="setup-option" id="setup-opt-server">
+          <input type="radio" name="setup-mode" value="imagetrans" checked />
+          <div class="setup-option-content">
+            <strong>ImageTrans Server</strong>
+            <span>Connect to a remote/local ImageTrans server. Best quality, handles layout & rendering.</span>
+          </div>
+        </label>
+        <label class="setup-option" id="setup-opt-local">
+          <input type="radio" name="setup-mode" value="local" />
+          <div class="setup-option-content">
+            <strong>Local PaddleOCR</strong>
+            <span>Run OCR in your browser. Free, no server needed. Translate via MyMemory (free) or bring your own API key for ChatGPT / DeepSeek / OpenAI-compatible services.</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="setup-section">
+      <div class="setup-label">Languages</div>
+      <div class="setup-row">
+        <label>Source <select id="setup-sourceLang"></select></label>
+        <label>→ Target <select id="setup-targetLang"></select></label>
+      </div>
+    </div>
+
+    <div class="setup-section" id="setup-server-section">
+      <div class="setup-label">Server URL (optional)</div>
+      <input type="text" id="setup-serverURL" placeholder="https://service.basiccat.org:51043" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;" />
+    </div>
+
+    <button class="btn-primary" id="btn-setup-start" style="width:100%;padding:12px;font-size:15px;font-weight:600;margin-top:8px;">Get Started</button>
+    <div style="text-align:center;margin-top:8px;">
+      <a href="javascript:void(0)" id="btn-setup-skip" style="color:var(--text-secondary);font-size:13px;">Skip, use defaults</a>
+    </div>
+  </div>
 </div>
 
 <!-- Text Modal -->

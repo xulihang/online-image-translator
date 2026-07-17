@@ -76,8 +76,12 @@
     // Apply UI language
     applyI18n();
 
-    // Show translate tab by default
-    switchTab('translate');
+    // Show first-run setup if not completed
+    if (!localStorage.getItem('imagetrans_setup_done')) {
+      showSetupModal();
+    } else {
+      switchTab('translate');
+    }
   }
 
   function cacheDOMElements() {
@@ -137,6 +141,84 @@
     Object.keys(tabPanels).forEach(function(id) {
       tabPanels[id].classList.toggle('hidden', id !== tabId);
     });
+  }
+
+  // ==================== First-run Setup Modal ====================
+
+  function showSetupModal() {
+    const modal = $('#setup-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+
+    // Populate language selects
+    const srcSelect = $('#setup-sourceLang');
+    const tgtSelect = $('#setup-targetLang');
+    [srcSelect, tgtSelect].forEach(function(sel) {
+      if (!sel) return;
+      sel.innerHTML = '';
+      LANGUAGE_CODES.forEach(function(lang) {
+        if (lang.code === 'auto') return; // no auto in setup
+        const opt = document.createElement('option');
+        opt.value = lang.code;
+        opt.textContent = lang.name;
+        sel.appendChild(opt);
+      });
+    });
+    if (srcSelect) setSelectValue(srcSelect, 'ja');
+    if (tgtSelect) setSelectValue(tgtSelect, 'en');
+
+    // Server URL field
+    const serverInput = $('#setup-serverURL');
+    if (serverInput) serverInput.value = Settings.get('serverURL');
+
+    // Mode selection visuals
+    const optServer = $('#setup-opt-server');
+    const optLocal = $('#setup-opt-local');
+    const serverSection = $('#setup-server-section');
+
+    function updateModeUI() {
+      const mode = document.querySelector('input[name="setup-mode"]:checked');
+      if (!mode) return;
+      if (optServer) optServer.classList.toggle('selected', mode.value === 'imagetrans');
+      if (optLocal) optLocal.classList.toggle('selected', mode.value === 'local');
+      if (serverSection) serverSection.style.display = mode.value === 'imagetrans' ? '' : 'none';
+    }
+
+    if (optServer) optServer.addEventListener('click', function() {
+      document.querySelector('input[value="imagetrans"]').checked = true;
+      updateModeUI();
+    });
+    if (optLocal) optLocal.addEventListener('click', function() {
+      document.querySelector('input[value="local"]').checked = true;
+      updateModeUI();
+    });
+    updateModeUI();
+
+    // Get Started
+    const startBtn = $('#btn-setup-start');
+    if (startBtn) {
+      startBtn.onclick = function() {
+        const mode = document.querySelector('input[name="setup-mode"]:checked');
+        Settings.set('translationMode', mode ? mode.value : 'imagetrans');
+        Settings.set('renderTextInFrontend', mode && mode.value === 'local');
+        if (srcSelect) Settings.set('sourceLang', srcSelect.value);
+        if (tgtSelect) Settings.set('targetLang', tgtSelect.value);
+        if (serverInput && serverInput.value) Settings.set('serverURL', serverInput.value);
+        localStorage.setItem('imagetrans_setup_done', '1');
+        modal.style.display = 'none';
+        switchTab('translate');
+      };
+    }
+
+    // Skip
+    const skipBtn = $('#btn-setup-skip');
+    if (skipBtn) {
+      skipBtn.onclick = function() {
+        localStorage.setItem('imagetrans_setup_done', '1');
+        modal.style.display = 'none';
+        switchTab('translate');
+      };
+    }
   }
 
   // ==================== Status Mask ====================
