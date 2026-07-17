@@ -1145,14 +1145,14 @@
     for (let i = 0; i < elements.length; i++) {
       const el = elements[i];
       const key = el.getAttribute('data-i18n');
-      if (key) {
-        if (el.tagName === 'INPUT' && (el.type === 'button' || el.type === 'submit')) {
-          el.value = t(key);
-        } else if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-          el.placeholder = t(key);
-        } else {
-          el.textContent = t(key);
-        }
+      if (!key) continue;
+      if (el.tagName === 'TITLE') continue;
+      if (el.tagName === 'INPUT' && (el.type === 'button' || el.type === 'submit')) {
+        el.value = t(key);
+      } else if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        el.placeholder = t(key);
+      } else {
+        el.textContent = t(key);
       }
     }
   }
