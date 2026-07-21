@@ -250,7 +250,7 @@
       startBtn.onclick = function() {
         const mode = document.querySelector('input[name="setup-mode"]:checked');
         Settings.set('translationMode', mode ? mode.value : 'imagetrans');
-        Settings.set('renderTextInFrontend', mode && mode.value === 'local');
+        //Settings.set('renderTextInFrontend', mode && mode.value === 'local');
         if (srcSelect) Settings.set('sourceLang', srcSelect.value);
         if (tgtSelect) Settings.set('targetLang', tgtSelect.value);
         if (serverInput && serverInput.value) Settings.set('serverURL', serverInput.value);
