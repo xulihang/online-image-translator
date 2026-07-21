@@ -1178,7 +1178,7 @@
       'serverURL', 'displayName', 'password',
       'sourceLang', 'targetLang', 'translationMode', 'defaultPresetTranslation',
       'useOpenAI', 'openaiURL', 'openaiKey', 'openaiModel', 'openaiPrompt',
-      'ocrMethod', 'useYOLODetection', 'useYOLOForJapanese',
+      'ocrMethod', 'useYOLODetection', 'useYOLOForJapanese', 'paddleDetModel',
       'xSpacing', 'ySpacing', 'renderTextCSS', 'renderTextInFrontend',
       'uiLanguage'
     ];
@@ -1209,7 +1209,7 @@
       'serverURL', 'displayName', 'password',
       'sourceLang', 'targetLang', 'translationMode', 'defaultPresetTranslation',
       'useOpenAI', 'openaiURL', 'openaiKey', 'openaiModel', 'openaiPrompt',
-      'ocrMethod', 'useYOLODetection', 'useYOLOForJapanese',
+      'ocrMethod', 'useYOLODetection', 'useYOLOForJapanese', 'paddleDetModel',
       'xSpacing', 'ySpacing', 'renderTextCSS', 'renderTextInFrontend',
       'uiLanguage'
     ];
