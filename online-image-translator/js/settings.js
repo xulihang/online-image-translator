@@ -26,7 +26,7 @@ const DEFAULTS = {
   defaultPresetTranslation: 'mymemory',
   useYOLODetection: false,
   useYOLOForJapanese: true,
-  paddleDetModel: 'tiny',
+  paddleDetModel: 'small',
   xSpacing: 15,
   ySpacing: 15,
   sendRequestsViaBackground: false,
