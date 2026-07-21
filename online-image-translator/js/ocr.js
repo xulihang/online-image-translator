@@ -244,7 +244,9 @@ const OCR = (function() {
         dic: dic,
         ort: window.ort,
         node: false,
-        cv: window.cv
+        cv: window.cv,
+        det_db_thresh: 0.6,
+        erode_size: 2
       });
 
       paddleReady = true;
@@ -639,7 +641,7 @@ const OCR = (function() {
         }
       });
     });
-
+    console.log(srcItems);
     const xSpacing = Settings.get('xSpacing');
     const ySpacing = Settings.get('ySpacing');
     const mergedGroups = mergeTextBoxes(srcItems, sourceLang, xSpacing, ySpacing);
