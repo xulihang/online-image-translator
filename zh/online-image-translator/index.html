@@ -1051,19 +1051,6 @@
 <script src="/online-image-translator/js/render.js"></script>
 <script src="/online-image-translator/js/translate.js"></script>
 <script src="/online-image-translator/js/app.js"></script>
-<script>
-  // 注册 Service Worker 以缓存 ModelScope 模型文件。
-  // ModelScope 返回 302 重定向；SW 以原始 URL 为 key 缓存最终响应，避免重复下载。
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/online-image-translator/service-worker.js')
-      .then(function (reg) {
-        console.log('[SW] Registered, scope:', reg.scope);
-      })
-      .catch(function (err) {
-        console.error('[SW] Registration failed:', err);
-      });
-  }
-</script>
 
 </body>
 </html>
