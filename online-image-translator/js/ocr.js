@@ -238,16 +238,19 @@ const OCR = (function() {
       const res = await fetch(modelInfo.dicUrl);
       const dic = await res.text();
 
-      await Paddle.init({
+      const initOpts = {
         detPath: modelInfo.detUrl,
         recPath: modelInfo.recUrl,
         dic: dic,
         ort: window.ort,
         node: false,
-        cv: window.cv,
-        det_db_thresh: 0.6,
-        erode_size: 2
-      });
+        cv: window.cv
+      };
+      if (sourceLang === 'zh') {
+        initOpts.det_db_thresh = 0.6;
+        initOpts.erode_size = 2;
+      }
+      await Paddle.init(initOpts);
 
       paddleReady = true;
     })();
