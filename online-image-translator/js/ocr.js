@@ -217,6 +217,22 @@ const OCR = (function() {
     return 'webgpu';
   }
 
+  // Apply user-configured extra PaddleOCR params (a JSON string from
+  // Settings, e.g. det_db_thresh / detMean / erode_size) onto an init
+  // options object. Invalid or empty config is ignored.
+  function applyExtraParams(initOpts) {
+    let extra = Settings.get('paddleExtraParams');
+    if (typeof extra === 'string' && extra.trim() !== '') {
+      try { extra = JSON.parse(extra); } catch (e) { return; }
+    }
+    if (!extra || typeof extra !== 'object' || Array.isArray(extra)) return;
+    Object.keys(extra).forEach(function(key) {
+      if (extra[key] !== undefined && extra[key] !== null) {
+        initOpts[key] = extra[key];
+      }
+    });
+  }
+
   async function loadDependencies(onProgress) {
     if (depsLoaded) return;
     if (depsLoading) {
@@ -336,10 +352,7 @@ const OCR = (function() {
         node: false,
         cv: window.cv
       };
-      if (sourceLang === 'zh') {
-        initOpts.det_db_thresh = 0.6;
-        initOpts.erode_size = 2;
-      }
+      applyExtraParams(initOpts);
       await Paddle.init(initOpts);
 
       paddleReady = true;
