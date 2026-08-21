@@ -286,9 +286,13 @@ const Translate = (function() {
       return { boxes: boxes, translatedImage: null, renderTextInFrontend: true, noText: true };
     }
 
-    // Step 3: Translate
+    // Step 3: Translate. When the default preset is 'original', skip
+    // translation and fill the recognized source text back so OCR results can
+    // be viewed in place (matching the Chrome extension's behavior).
     let translations;
-    if (useOpenAI) {
+    if (defaultPreset === 'original') {
+      translations = sourceTexts.slice();
+    } else if (useOpenAI) {
       translations = await translateViaOpenAI(sourceTexts, sourceLang, targetLang);
     } else {
       translations = await translateBatchViaMyMemory(sourceTexts, sourceLang, targetLang);
