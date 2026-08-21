@@ -1177,7 +1177,7 @@
     const fields = [
       'serverURL', 'displayName', 'password',
       'sourceLang', 'targetLang', 'translationMode', 'defaultPresetTranslation',
-      'useOpenAI', 'openaiURL', 'openaiKey', 'openaiModel', 'openaiPrompt',
+      'useOpenAI', 'openaiURL', 'openaiKey', 'openaiModel', 'openaiPrompt', 'openaiExtraParams',
       'ocrMethod', 'ocrBackend', 'useYOLODetection', 'useYOLOForJapanese', 'paddleDetModel',
       'paddleExtraParams',
       'xSpacing', 'ySpacing', 'renderTextCSS', 'renderTextInFrontend',
@@ -1213,7 +1213,7 @@
     const fields = [
       'serverURL', 'displayName', 'password',
       'sourceLang', 'targetLang', 'translationMode', 'defaultPresetTranslation',
-      'useOpenAI', 'openaiURL', 'openaiKey', 'openaiModel', 'openaiPrompt',
+      'useOpenAI', 'openaiURL', 'openaiKey', 'openaiModel', 'openaiPrompt', 'openaiExtraParams',
       'ocrMethod', 'ocrBackend', 'useYOLODetection', 'useYOLOForJapanese', 'paddleDetModel',
       'paddleExtraParams',
       'xSpacing', 'ySpacing', 'renderTextCSS', 'renderTextInFrontend',
