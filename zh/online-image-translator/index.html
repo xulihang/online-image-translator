@@ -792,6 +792,7 @@
             <span data-i18n="settings_default_preset">默认预设</span>
             <select id="setting-defaultPresetTranslation">
               <option value="mymemory" data-i18n="settings_preset_mymemory">MyMemory</option>
+              <option value="original" data-i18n="settings_preset_original">原文</option>
             </select>
           </label>
         </div>
@@ -874,6 +875,10 @@
           <div class="form-row">
             <label><span data-i18n="settings_prompt">提示词</span></label>
             <textarea id="setting-openaiPrompt" rows="4"></textarea>
+          </div>
+          <div class="form-row">
+            <label><span data-i18n="settings_openai_extra_params">额外参数（JSON）</span></label>
+            <input type="text" id="setting-openaiExtraParams" class="wide" placeholder='{"thinking":{"type":"disabled"}}' />
           </div>
         </div>
       </div>
