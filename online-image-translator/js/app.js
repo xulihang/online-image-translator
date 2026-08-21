@@ -1244,7 +1244,8 @@
       'css-rounded': 'text-align: center;\nborder-radius: 8px;',
       'css-uppercase': 'text-align: center;\ntext-transform: uppercase;',
       'css-rounded-uppercase': 'text-align: center;\nborder-radius: 8px;\ntext-transform: uppercase;',
-      'css-vertical': 'writing-mode: vertical-rl;\ntext-align: start;'
+      'css-vertical': 'writing-mode: vertical-rl;\ntext-align: start;',
+      'css-rtl': 'direction: rtl;\ntext-align: start;'
     };
 
     Object.keys(presets).forEach(function(id) {
