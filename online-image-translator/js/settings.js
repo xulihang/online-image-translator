@@ -4,6 +4,10 @@
 const DEFAULT_OPENAI_PROMPT = `Translate the following texts from {sourceLang} to {targetLang}. Return ONLY a JSON array of translated strings in the same order (no markdown, no code fences).
 Texts: {texts}`;
 
+// Default OpenAI extra params, merged into the chat/completions request body.
+// Matches the Chrome extension's DeepSeek default.
+const DEFAULT_OPENAI_EXTRA_PARAMS = '{"thinking":{"type":"disabled"}}';
+
 const DEFAULTS = {
   serverURL: 'https://service.basiccat.org:51043',
   pickingWay: '1',
@@ -17,11 +21,11 @@ const DEFAULTS = {
   sourceLang: 'auto',
   targetLang: 'auto',
   useOpenAI: false,
-  openaiURL: 'https://api.openai.com/v1',
+  openaiURL: 'https://api.deepseek.com/v1',
   openaiKey: '',
-  openaiModel: 'gpt-4o',
+  openaiModel: 'deepseek-v4-flash',
   openaiPrompt: DEFAULT_OPENAI_PROMPT,
-  openaiExtraParams: '',
+  openaiExtraParams: DEFAULT_OPENAI_EXTRA_PARAMS,
   ocrMethod: 'paddleocr',
   ocrBackend: 'webgpu',
   translationMode: 'imagetrans',
