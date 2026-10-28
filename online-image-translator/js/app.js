@@ -24,6 +24,13 @@
   let translateBoxes = [];
   let translateScale = 1.0;
   let translateOriginalDataURL = null;
+  // Data needed to export a layered PSD from the last translation.
+  let translateWorkingDataURL = null;
+  let translateRenderedDataURL = null;
+  let translateCssText = null;
+  let translateTargetLang = null;
+  let translateFileName = '';
+  let exportPsdBtn = null;
 
   // Scan tab
   let scanResults = null;
@@ -100,6 +107,7 @@
     translateFileInput = $('#translate-file-input');
     translateDropZone = $('#translate-drop-zone');
     translateBtn = $('#btn-translate');
+    exportPsdBtn = $('#btn-export-psd');
     translateShowChk = $('#chk-show-translated');
     translateContainer = $('#translate-image-container');
     translateOverlay = $('#translate-text-overlay');
@@ -448,6 +456,11 @@
       translateBtn.addEventListener('click', doTranslate);
     }
 
+    // Export PSD button
+    if (exportPsdBtn) {
+      exportPsdBtn.addEventListener('click', exportTranslatePSD);
+    }
+
     // Show translated checkbox
     if (translateShowChk) {
       translateShowChk.addEventListener('change', function() {
@@ -468,6 +481,7 @@
   }
 
   function loadTranslateImage(file) {
+    translateFileName = (file && file.name) ? file.name : '';
     const reader = new FileReader();
     reader.onload = function(e) {
       translateOriginalDataURL = e.target.result;
@@ -485,6 +499,11 @@
       if (overlay) overlay.remove();
       translateBoxes = [];
       translateScale = 1.0;
+      translateWorkingDataURL = null;
+      translateRenderedDataURL = null;
+      translateCssText = null;
+      translateTargetLang = null;
+      updateExportButton();
       // Reset checkbox
       if (translateShowChk) translateShowChk.checked = false;
       // Hide drop zone
@@ -504,6 +523,10 @@
 
     showStatus(t('translating'));
     translateBtn.disabled = true;
+    translateBoxes = [];
+    translateWorkingDataURL = null;
+    translateRenderedDataURL = null;
+    updateExportButton();
 
     try {
       const img = translateImgSource;
@@ -516,6 +539,12 @@
         finalDataURL = compressed.dataURL;
         translateScale = 1500 / img.naturalWidth;
       }
+
+      // Remember the exact image the text boxes are positioned on, plus the
+      // styles used for rendering, so the PSD export matches the preview.
+      translateWorkingDataURL = finalDataURL;
+      translateCssText = Settings.get('renderTextCSS');
+      translateTargetLang = Settings.get('targetLang');
 
       // Validate language pair
       // Local PaddleOCR always needs explicit languages
@@ -553,6 +582,7 @@
 
       if (result.translatedImage && !result.renderTextInFrontend) {
         // Server returned a rendered image - wait for it to load + layout
+        translateRenderedDataURL = result.translatedImage;
         if (translateImgTarget) {
           translateImgTarget.src = result.translatedImage;
           translateImgTarget.style.display = '';
@@ -564,6 +594,7 @@
       } else if (result.boxes.length > 0) {
         // Render text on canvas, wait for image load + layout, then create overlay
         const renderedDataURL = await Render.renderTranslatedImage(finalDataURL, result.boxes);
+        translateRenderedDataURL = renderedDataURL;
         if (translateImgTarget) {
           translateImgTarget.src = renderedDataURL;
           translateImgTarget.style.display = '';
@@ -587,6 +618,47 @@
 
     hideStatus();
     translateBtn.disabled = false;
+    updateExportButton();
+  }
+
+  // ==================== PSD Export ====================
+
+  function updateExportButton() {
+    if (!exportPsdBtn) return;
+    const hasText = translateBoxes && translateBoxes.some(function(box) {
+      return box && box.target;
+    });
+    exportPsdBtn.disabled = !(hasText && translateWorkingDataURL);
+  }
+
+  async function exportTranslatePSD() {
+    if (typeof PSD === 'undefined') {
+      alert('PSD export is not available.');
+      return;
+    }
+    if (!translateWorkingDataURL || !translateBoxes.length) return;
+
+    showStatus(t('exporting_psd'));
+    exportPsdBtn.disabled = true;
+    try {
+      const baseName = translateFileName
+        ? translateFileName.replace(/\.[^.]+$/, '')
+        : 'translated';
+      await PSD.export({
+        workingDataURL: translateWorkingDataURL,
+        renderedDataURL: translateRenderedDataURL,
+        boxes: translateBoxes,
+        cssText: translateCssText || Settings.get('renderTextCSS'),
+        filename: baseName + '.psd',
+        targetLang: translateTargetLang || Settings.get('targetLang')
+      });
+    } catch (err) {
+      console.error('PSD export failed:', err);
+      alert(t('psd_export_failed') + ' ' + err.message);
+    } finally {
+      hideStatus();
+      updateExportButton();
+    }
   }
 
   function toggleTranslatedView(showTranslated) {

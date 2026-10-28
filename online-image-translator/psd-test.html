@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>PSD export test</title></head>
+<body>
+<pre id="out">running...</pre>
+<script src="js/settings.js"></script>
+<script src="js/render.js"></script>
+<script src="lib/ag-psd/ag-psd.js"></script>
+<script src="js/psd.js"></script>
+<script>
+(function() {
+  var out = document.getElementById('out');
+  function makeImage() {
+    var c = document.createElement('canvas');
+    c.width = 400; c.height = 300;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = '#f5f5f5';
+    ctx.fillRect(0, 0, 400, 300);
+    ctx.fillStyle = '#888';
+    ctx.fillRect(40, 30, 200, 60);
+    ctx.fillRect(40, 120, 180, 50);
+    return c.toDataURL('image/png');
+  }
+
+  HTMLAnchorElement.prototype.click = function() {
+    window.__downloadName = this.download;
+  };
+
+  var img = makeImage();
+  var cases = [
+    {
+      name: 'default',
+      css: 'text-align: center;\nborder-radius: 10%;',
+      boxes: [
+        { geometry: { X: 40, Y: 30, width: 200, height: 60 }, target: 'Hello PSD' },
+        { geometry: { X: 40, Y: 120, width: 180, height: 50 }, target: 'Second line text' }
+      ],
+      lang: 'en'
+    },
+    {
+      name: 'rtl',
+      css: 'direction: rtl;\ntext-align: start;',
+      boxes: [
+        { geometry: { X: 40, Y: 30, width: 200, height: 60 }, target: 'مرحبا بالعالم' }
+      ],
+      lang: 'ar'
+    },
+    {
+      name: 'vertical',
+      css: 'writing-mode: vertical-rl;\ntext-align: start;',
+      boxes: [
+        { geometry: { X: 40, Y: 30, width: 60, height: 200 }, target: '縦書きテキスト' }
+      ],
+      lang: 'ja'
+    }
+  ];
+
+  var results = {};
+  var origWrite = agPsd.writePsd;
+
+  function runCase(c) {
+    return new Promise(function(resolve, reject) {
+      agPsd.writePsd = function(psd, opts) {
+        var info = { layers: psd.children.map(function(l) {
+          return { name: l.name, hasText: !!l.text, hidden: !!l.hidden, w: l.canvas.width, h: l.canvas.height };
+        }) };
+        var buf = origWrite(psd, opts);
+        info.bytes = buf.byteLength;
+        try {
+          var parsed = agPsd.readPsd(buf);
+          info.texts = parsed.children.filter(function(l) { return l.text; }).map(function(l) {
+            return { text: l.text.text, font: l.text.style && l.text.style.font && l.text.style.font.name, justify: l.text.paragraphStyle && l.text.paragraphStyle.justification };
+          });
+        } catch (e) {
+          info.parseError = String(e);
+        }
+        results[c.name] = info;
+        resolve();
+        return buf;
+      };
+      PSD.export({
+        workingDataURL: img,
+        renderedDataURL: img,
+        boxes: c.boxes,
+        cssText: c.css,
+        filename: c.name + '.psd',
+        targetLang: c.lang
+      }).then(resolve).catch(function(e) {
+        results[c.name] = { error: e.message + '\n' + e.stack };
+        resolve();
+      });
+    });
+  }
+
+  (async function() {
+    try {
+      for (var i = 0; i < cases.length; i++) await runCase(cases[i]);
+      out.textContent = 'DONE ' + JSON.stringify(results, null, 1);
+      document.title = 'DONE';
+    } catch (e) {
+      out.textContent = 'ERROR ' + e.message + '\n' + e.stack;
+      document.title = 'ERROR';
+    }
+  })();
+})();
+</script>
+</body>
+</html>
