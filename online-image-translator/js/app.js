@@ -31,6 +31,7 @@
   let translateTargetLang = null;
   let translateFileName = '';
   let exportPsdBtn = null;
+  let exportItpBtn = null;
 
   // Scan tab
   let scanResults = null;
@@ -108,6 +109,7 @@
     translateDropZone = $('#translate-drop-zone');
     translateBtn = $('#btn-translate');
     exportPsdBtn = $('#btn-export-psd');
+    exportItpBtn = $('#btn-export-itp');
     translateShowChk = $('#chk-show-translated');
     translateContainer = $('#translate-image-container');
     translateOverlay = $('#translate-text-overlay');
@@ -461,6 +463,11 @@
       exportPsdBtn.addEventListener('click', exportTranslatePSD);
     }
 
+    // Export ImageTrans project button
+    if (exportItpBtn) {
+      exportItpBtn.addEventListener('click', exportTranslateITP);
+    }
+
     // Show translated checkbox
     if (translateShowChk) {
       translateShowChk.addEventListener('change', function() {
@@ -621,14 +628,15 @@
     updateExportButton();
   }
 
-  // ==================== PSD Export ====================
+  // ==================== PSD / ImageTrans Project Export ====================
 
   function updateExportButton() {
-    if (!exportPsdBtn) return;
     const hasText = translateBoxes && translateBoxes.some(function(box) {
       return box && box.target;
     });
-    exportPsdBtn.disabled = !(hasText && translateWorkingDataURL);
+    const enabled = !!(hasText && translateWorkingDataURL);
+    if (exportPsdBtn) exportPsdBtn.disabled = !enabled;
+    if (exportItpBtn) exportItpBtn.disabled = !enabled;
   }
 
   async function exportTranslatePSD() {
@@ -655,6 +663,34 @@
     } catch (err) {
       console.error('PSD export failed:', err);
       alert(t('psd_export_failed') + ' ' + err.message);
+    } finally {
+      hideStatus();
+      updateExportButton();
+    }
+  }
+
+  async function exportTranslateITP() {
+    if (typeof ITP === 'undefined') {
+      alert('ImageTrans project export is not available.');
+      return;
+    }
+    if (!translateWorkingDataURL || !translateBoxes.length) return;
+
+    showStatus(t('exporting_itp'));
+    exportItpBtn.disabled = true;
+    try {
+      const baseName = translateFileName
+        ? translateFileName.replace(/\.[^.]+$/, '')
+        : 'translated';
+      ITP.export({        fileName: translateFileName || (baseName + '.jpg'),
+        boxes: translateBoxes,
+        scale: translateScale,
+        targetLang: translateTargetLang || Settings.get('targetLang'),
+        filename: baseName + '.itp'
+      });
+    } catch (err) {
+      console.error('ImageTrans project export failed:', err);
+      alert(t('itp_export_failed') + ' ' + err.message);
     } finally {
       hideStatus();
       updateExportButton();
