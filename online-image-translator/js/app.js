@@ -30,8 +30,7 @@
   let translateCssText = null;
   let translateTargetLang = null;
   let translateFileName = '';
-  let exportPsdBtn = null;
-  let exportItpBtn = null;
+  let exportBtn = null;
 
   // Scan tab
   let scanResults = null;
@@ -63,6 +62,7 @@
   let statusMask = null;
   let statusText = null;
   let textModal = null;
+  let exportModal = null;
 
   // ==================== Initialization ====================
 
@@ -79,6 +79,8 @@
     setupSettingsTab();
     // Set up text modal
     setupTextModal();
+    // Set up export format dialog
+    setupExportModal();
     // Set up status mask
     setupStatusMask();
     // Apply UI language
@@ -108,8 +110,7 @@
     translateFileInput = $('#translate-file-input');
     translateDropZone = $('#translate-drop-zone');
     translateBtn = $('#btn-translate');
-    exportPsdBtn = $('#btn-export-psd');
-    exportItpBtn = $('#btn-export-itp');
+    exportBtn = $('#btn-export');
     translateShowChk = $('#chk-show-translated');
     translateContainer = $('#translate-image-container');
     translateOverlay = $('#translate-text-overlay');
@@ -130,6 +131,7 @@
     statusMask = $('#status-mask');
     statusText = $('#status-text');
     textModal = $('#text-modal');
+    exportModal = $('#export-modal');
   }
 
   // ==================== Tab Navigation ====================
@@ -458,14 +460,9 @@
       translateBtn.addEventListener('click', doTranslate);
     }
 
-    // Export PSD button
-    if (exportPsdBtn) {
-      exportPsdBtn.addEventListener('click', exportTranslatePSD);
-    }
-
-    // Export ImageTrans project button
-    if (exportItpBtn) {
-      exportItpBtn.addEventListener('click', exportTranslateITP);
+    // Export button
+    if (exportBtn) {
+      exportBtn.addEventListener('click', openExportModal);
     }
 
     // Show translated checkbox
@@ -628,15 +625,50 @@
     updateExportButton();
   }
 
-  // ==================== PSD / ImageTrans Project Export ====================
+  // ==================== Export (PSD / ImageTrans project) ====================
 
   function updateExportButton() {
     const hasText = translateBoxes && translateBoxes.some(function(box) {
       return box && box.target;
     });
-    const enabled = !!(hasText && translateWorkingDataURL);
-    if (exportPsdBtn) exportPsdBtn.disabled = !enabled;
-    if (exportItpBtn) exportItpBtn.disabled = !enabled;
+    if (exportBtn) exportBtn.disabled = !(hasText && translateWorkingDataURL);
+  }
+
+  function openExportModal() {
+    if (!exportModal) return;
+    exportModal.style.display = 'flex';
+    const first = exportModal.querySelector('.export-option');
+    if (first) first.focus();
+  }
+
+  function closeExportModal() {
+    if (exportModal) exportModal.style.display = 'none';
+  }
+
+  function setupExportModal() {
+    if (!exportModal) return;
+    const closeBtn = exportModal.querySelector('.modal-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeExportModal);
+    exportModal.addEventListener('click', function(e) {
+      if (e.target === exportModal) closeExportModal();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && exportModal.style.display === 'flex') closeExportModal();
+    });
+    const psdOption = $('#export-option-psd');
+    if (psdOption) {
+      psdOption.addEventListener('click', function() {
+        closeExportModal();
+        exportTranslatePSD();
+      });
+    }
+    const itpOption = $('#export-option-itp');
+    if (itpOption) {
+      itpOption.addEventListener('click', function() {
+        closeExportModal();
+        exportTranslateITP();
+      });
+    }
   }
 
   async function exportTranslatePSD() {
@@ -647,7 +679,7 @@
     if (!translateWorkingDataURL || !translateBoxes.length) return;
 
     showStatus(t('exporting_psd'));
-    exportPsdBtn.disabled = true;
+    exportBtn.disabled = true;
     try {
       const baseName = translateFileName
         ? translateFileName.replace(/\.[^.]+$/, '')
@@ -677,7 +709,7 @@
     if (!translateWorkingDataURL || !translateBoxes.length) return;
 
     showStatus(t('exporting_itp'));
-    exportItpBtn.disabled = true;
+    exportBtn.disabled = true;
     try {
       const baseName = translateFileName
         ? translateFileName.replace(/\.[^.]+$/, '')
