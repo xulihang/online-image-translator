@@ -68,22 +68,20 @@ const ITP = (function() {
     };
   }
 
-  // options: { fileName, boxes, scale, targetLang, filename }
-  // scale: working image size / original image size. Box geometry is in working
-  // image pixels (the image is rescaled before OCR), but ImageTrans measures the
-  // boxes on the original image, so they are divided by it.
+  // options: { fileName, boxes, targetLang, filename }
+  // Box geometry is already in original-image pixels: the ImageTrans server
+  // returns them on the image it was sent, and the local OCR path scales its
+  // boxes back up after downscaling.
   function exportITP(options) {
     const fileName = options.fileName || 'image.jpg';
-    const scale = options.scale > 0 ? options.scale : 1;
-    const toOriginal = function(v) { return Math.round(v / scale); };
     const boxes = (options.boxes || []).map(function(box) {
       const geo = box.geometry || {};
       return {
         geometry: {
-          X: toOriginal(geo.X || geo.x || 0),
-          width: toOriginal(geo.width || geo.Width || 0),
-          Y: toOriginal(geo.Y || geo.y || 0),
-          height: toOriginal(geo.height || geo.Height || 0)
+          X: geo.X || geo.x || 0,
+          width: geo.width || geo.Width || 0,
+          Y: geo.Y || geo.y || 0,
+          height: geo.height || geo.Height || 0
         },
         text: box.source || box.text || '',
         target: box.target

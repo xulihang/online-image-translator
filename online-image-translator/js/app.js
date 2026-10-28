@@ -682,9 +682,9 @@
       const baseName = translateFileName
         ? translateFileName.replace(/\.[^.]+$/, '')
         : 'translated';
-      ITP.export({        fileName: translateFileName || (baseName + '.jpg'),
+      ITP.export({
+        fileName: translateFileName || (baseName + '.jpg'),
         boxes: translateBoxes,
-        scale: translateScale,
         targetLang: translateTargetLang || Settings.get('targetLang'),
         filename: baseName + '.itp'
       });
