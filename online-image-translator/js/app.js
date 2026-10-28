@@ -678,7 +678,7 @@
     }
     if (!translateWorkingDataURL || !translateBoxes.length) return;
 
-    showStatus(t('loading_psd'));
+    // Status switches between "loading" and "exporting" via the PSD callbacks.
     exportBtn.disabled = true;
     try {
       const baseName = translateFileName
