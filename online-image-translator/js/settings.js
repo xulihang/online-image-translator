@@ -281,6 +281,11 @@ const I18N = {
     about_extension_desc: 'ImageTrans also offers a browser extension that can detect and translate images directly on webpages, making it easy to read translated comics and manga online.',
     about_extension_cta: 'Learn more about the Browser Extension',
   },
+  ja: {},
+  ko: {},
+  ar: {},
+  fr: {},
+  pt: {},
   zh: {
     tab_translate: '翻译',
     tab_scan: '扫描',
