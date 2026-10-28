@@ -257,6 +257,11 @@ const PSD = (function() {
     children.push({ name: 'Text Removed', canvas: cleanCanvas });
     children.push({ name: 'Original', canvas: originalCanvas, hidden: true });
 
+    // ag-psd writes children bottom-to-top (first entry = bottom layer),
+    // so reverse the top-to-bottom order built above: text layers, then
+    // "Text Removed", then the hidden "Original".
+    children.reverse();
+
     const psd = { width: width, height: height, children: children };
     psd.canvas = await buildComposite(
       options.renderedDataURL, cleanCanvas, textLayers, width, height
