@@ -3,10 +3,64 @@
 //   - one editable text layer per translated text box
 //   - a "text removed" background layer (original image with text boxes painted over)
 //   - the original image, hidden by default
-// Uses ag-psd (lib/ag-psd/ag-psd.js) for PSD writing.
+// Uses ag-psd for PSD writing, loaded on demand from a CDN the first time a
+// PSD is exported (like OpenCV/PaddleOCR in ocr.js), so it costs nothing
+// until the user actually exports.
 
 const PSD = (function() {
   'use strict';
+
+  // Pinned version so a CDN update can't change writePsd behavior.
+  const AG_PSD_PRIMARY = 'https://cdn.jsdmirror.com/npm/ag-psd@33.0.0/dist/bundle.min.js';
+  const AG_PSD_FALLBACK = 'https://cdn.jsdelivr.net/npm/ag-psd@33.0.0/dist/bundle.min.js';
+  const AG_PSD_TIMEOUT_MS = 15000;
+
+  let agPsd = null;
+  let agPsdPromise = null;
+
+  // Try the primary CDN, switch to the fallback on error or timeout, and
+  // resolve once the global agPsd exists. Concurrent callers share one load.
+  function loadAgPsd() {
+    if (agPsd && agPsd.writePsd) return Promise.resolve(agPsd);
+    if (agPsdPromise) return agPsdPromise;
+
+    agPsdPromise = new Promise(function(resolve, reject) {
+      let settled = false;
+      const finish = function(err) {
+        if (settled) return;
+        settled = true;
+        // The UMD bundle assigns the global; keep a module-local reference so
+        // the rest of this file never depends on the global lookup.
+        if (!err && window.agPsd && window.agPsd.writePsd) agPsd = window.agPsd;
+        if (agPsd) {
+          resolve(agPsd);
+        } else {
+          agPsdPromise = null;
+          reject(err || new Error('PSD library is not loaded.'));
+        }
+      };
+      const inject = function(src, isFallback) {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = function() { finish(); };
+        script.onerror = function() {
+          script.remove();
+          if (isFallback) finish(new Error('Failed to load PSD library.'));
+          else inject(AG_PSD_FALLBACK, true);
+        };
+        document.head.appendChild(script);
+        if (!isFallback) {
+          setTimeout(function() {
+            if (settled) return;
+            script.remove();
+            inject(AG_PSD_FALLBACK, true);
+          }, AG_PSD_TIMEOUT_MS);
+        }
+      };
+      inject(AG_PSD_PRIMARY, false);
+    });
+    return agPsdPromise;
+  }
 
   // Common CSS font families mapped to Photoshop PostScript names.
   const FONT_MAP = {
@@ -174,17 +228,20 @@ const PSD = (function() {
   }
 
   // options: {
-  //   workingDataURL, renderedDataURL, boxes, cssText, filename, targetLang
+  //   workingDataURL, renderedDataURL, boxes, cssText, filename, targetLang,
+  //   onLoadStart (called when the ag-psd library starts loading),
+  //   onLoaded (called once the library is ready, if it had to be loaded)
   // }
   async function exportPSD(options) {
-    if (typeof agPsd === 'undefined' || !agPsd.writePsd) {
-      throw new Error('PSD library is not loaded.');
-    }
     const workingDataURL = options.workingDataURL;
     if (!workingDataURL) throw new Error('No translated image to export.');
 
     const boxes = options.boxes || [];
     if (!boxes.length) throw new Error('No text boxes to export.');
+
+    if (!agPsd && options.onLoadStart) options.onLoadStart();
+    agPsd = await loadAgPsd();
+    if (options.onLoaded) options.onLoaded();
 
     const cssText = options.cssText || Settings.get('renderTextCSS');
     const targetLang = options.targetLang || Settings.get('targetLang');

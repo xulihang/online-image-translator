@@ -678,7 +678,7 @@
     }
     if (!translateWorkingDataURL || !translateBoxes.length) return;
 
-    showStatus(t('exporting_psd'));
+    showStatus(t('loading_psd'));
     exportBtn.disabled = true;
     try {
       const baseName = translateFileName
@@ -690,7 +690,10 @@
         boxes: translateBoxes,
         cssText: translateCssText || Settings.get('renderTextCSS'),
         filename: baseName + '.psd',
-        targetLang: translateTargetLang || Settings.get('targetLang')
+        targetLang: translateTargetLang || Settings.get('targetLang'),
+        // ag-psd is fetched from a CDN on first use; report the load, then the export.
+        onLoadStart: function() { showStatus(t('loading_psd')); },
+        onLoaded: function() { showStatus(t('exporting_psd')); }
       });
     } catch (err) {
       console.error('PSD export failed:', err);
