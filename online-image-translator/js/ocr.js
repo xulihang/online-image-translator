@@ -611,6 +611,19 @@ const OCR = (function() {
     return merged;
   }
 
+  // Merge the recognized lines according to the user's setting: into panels
+  // (speech balloons or paragraphs) when layout analysis is on, otherwise by
+  // mergeTextBoxes() rules alone. Keeping neighbour balloons separate matters
+  // for Western comics, which have many small balloons per page.
+  function mergeRecognizedItems(items, sourceLang) {
+    const xSpacing = Settings.get('xSpacing');
+    const ySpacing = Settings.get('ySpacing');
+    if (Settings.get('layoutAnalysis') && typeof PanelMerger !== 'undefined') {
+      return PanelMerger.merge(items, sourceLang, xSpacing, ySpacing);
+    }
+    return mergeTextBoxes(items, sourceLang, xSpacing, ySpacing);
+  }
+
   // ==================== YOLO Detection (from page-ocr.js) ====================
 
   let yoloSession = null;
@@ -803,9 +816,7 @@ const OCR = (function() {
       });
     });
     console.log(srcItems);
-    const xSpacing = Settings.get('xSpacing');
-    const ySpacing = Settings.get('ySpacing');
-    const mergedGroups = mergeTextBoxes(srcItems, sourceLang, xSpacing, ySpacing);
+    const mergedGroups = mergeRecognizedItems(srcItems, sourceLang);
 
     const boxes = [];
     mergedGroups.forEach(function(group) {
@@ -861,9 +872,7 @@ const OCR = (function() {
 
     if (srcItems.length === 0) return [];
 
-    const xSpacing = Settings.get('xSpacing');
-    const ySpacing = Settings.get('ySpacing');
-    const mergedGroups = mergeTextBoxes(srcItems, sourceLang, xSpacing, ySpacing);
+    const mergedGroups = mergeRecognizedItems(srcItems, sourceLang);
 
     const boxes = [];
     mergedGroups.forEach(function(group) {
