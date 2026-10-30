@@ -1,9 +1,10 @@
 // Panel-aware text merging for comics.
 // Port of PanelMerger (ImageTrans-Android). Recognized lines are first
 // grouped into panels (speech balloons or paragraphs) by alignment and
-// proximity, and only lines of one panel are merged together. Neighbouring
-// balloons thus stay separate blocks, which matters for Western comics with
-// many small balloons per page.
+// proximity, and only lines of one panel are merged together. When the
+// detector supplies balloons (the manga model's class 5), those are the
+// panels instead. Neighbouring balloons thus stay separate blocks, which
+// matters for Western comics with many small balloons per page.
 //
 // Inside a panel, horizontal text merges left to right first (fragments on
 // one line) and then top to bottom (lines into paragraphs); vertical text
@@ -544,11 +545,76 @@ const PanelMerger = (function() {
     return groups;
   }
 
+  // ==================== Panels given by the detector ====================
+
+  // Slack for a detected balloon's box: half a line may stick out (the text
+  // runs to the balloon's edge, and the box has no margin for its outline).
+  const AROUND_CENTER = 18;
+
+  function area(box) {
+    return Math.abs(box.width * box.height);
+  }
+
+  function contains(outer, inner, slack) {
+    return inner.left >= outer.left - slack && inner.top >= outer.top - slack
+      && right(inner) <= right(outer) + slack && bottom(inner) <= bottom(outer) + slack;
+  }
+
+  // The lines grouped by the detected balloons: each line goes to the smallest
+  // balloon holding it. The lines outside every balloon (a caption, or a
+  // balloon the detector missed) are clustered by proximity as if there were
+  // no balloons, and never join the lines of a balloon.
+  function partitionDetected(lines, panelRects, vertical) {
+    const panels = panelRects.map(function(rect) {
+      return { left: rect.left, top: rect.top, width: rect.width, height: rect.height, text: '' };
+    });
+    const byArea = panels.map(function(panel, index) {
+      return { panel: panel, index: index };
+    }).sort(function(a, b) {
+      return area(a.panel) - area(b.panel);
+    });
+
+    const panelOf = new Map();
+    for (let i = 0; i < lines.length; i++) {
+      for (let j = 0; j < byArea.length; j++) {
+        if (contains(byArea[j].panel, lines[i], AROUND_CENTER)) {
+          panelOf.set(lines[i], byArea[j].index);
+          break;
+        }
+      }
+    }
+
+    const outside = [];
+    for (let i = 0; i < lines.length; i++) {
+      if (!panelOf.has(lines[i])) outside.push(lines[i]);
+    }
+    const outsideLabels = outside.length > 0 ? cluster(outside, vertical) : [];
+    const outsideIndex = new Map();
+    for (let i = 0; i < outside.length; i++) outsideIndex.set(outside[i], i);
+
+    // Inside lines carry their panel's index; outside lines carry a label
+    // after the panels' so the two can never group together.
+    const labels = lines.map(function(line) {
+      if (panelOf.has(line)) return panelOf.get(line);
+      return panels.length + outsideLabels[outsideIndex.get(line)];
+    });
+
+    const groups = partition(lines, labels);
+    const inside = [];
+    const outsideGroups = [];
+    for (let i = 0; i < groups.length; i++) {
+      if (panelOf.has(groups[i][0])) inside.push(groups[i]);
+      else outsideGroups.push(groups[i]);
+    }
+    return inside.concat(outsideGroups);
+  }
+
   // ==================== Entry point ====================
 
   // items: [{ text, box: [[x, y], ...] }] from PaddleOCR.
+  // panelRects: optional balloons [{ left, top, width, height }] from YOLO.
   // Returns merged blocks in the same shape as mergeTextBoxes().
-  function merge(items, sourceLang, xSpacing, ySpacing) {
+  function merge(items, sourceLang, xSpacing, ySpacing, panelRects) {
     if (!items || items.length === 0) return [];
     const xGap = (xSpacing != null && xSpacing > 0) ? xSpacing : DEFAULT_X_GAP;
     const yGap = (ySpacing != null && ySpacing > 0) ? ySpacing : DEFAULT_Y_GAP;
@@ -570,10 +636,11 @@ const PanelMerger = (function() {
 
     const vertical = verticalText(lines);
     const rightToLeft = isRTLLanguage(sourceLang);
-    const labels = cluster(lines, vertical);
 
     const blocks = [];
-    const panels = partition(lines, labels);
+    const panels = (panelRects && panelRects.length > 0)
+      ? partitionDetected(lines, panelRects, vertical)
+      : partition(lines, cluster(lines, vertical));
     for (let i = 0; i < panels.length; i++) {
       const ofPanel = mergePanel(panels[i], sourceLang, vertical, rightToLeft, xGap, yGap);
       if (!inReadingOrder(panels[i])) orderBlocks(ofPanel, vertical, rightToLeft);
